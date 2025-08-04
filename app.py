@@ -227,7 +227,9 @@ def show_main_leaderboard():
     # Display custom logo and title
     col1, col2 = st.columns([1, 8])
     with col1:
+        st.markdown("<div style='padding-top: 10px;'>", unsafe_allow_html=True)
         st.image("jdcvo.png", width=150)
+        st.markdown("</div>", unsafe_allow_html=True)
     with col2:
         st.markdown("<h1 style='margin-top: 0; padding-top: 0;'>The 'Jimmy D' Carroll Valley Open</h1>", unsafe_allow_html=True)
     st.markdown("---")
