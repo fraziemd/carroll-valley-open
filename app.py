@@ -3,7 +3,7 @@ import streamlit as st
 # Page configuration must be the first Streamlit command
 st.set_page_config(
     page_title="The 'Jimmy D' Carroll Valley Open",
-    page_icon="⛳",
+    page_icon="jdcvo.png",
     layout="wide"
 )
 
@@ -224,7 +224,12 @@ def show_player_detail(player_name):
 
 def show_main_leaderboard():
     """Show the main leaderboard."""
-    st.title("🏌️ The 'Jimmy D' Carroll Valley Open")
+    # Display custom logo and title
+    col1, col2 = st.columns([1, 8])
+    with col1:
+        st.image("jdcvo.png", width=150)
+    with col2:
+        st.markdown("<h1 style='margin-top: 0; padding-top: 0;'>The 'Jimmy D' Carroll Valley Open</h1>", unsafe_allow_html=True)
     st.markdown("---")
     
     # Load data from Google Sheets and past champions
