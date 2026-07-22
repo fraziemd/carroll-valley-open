@@ -1,0 +1,50 @@
+{
+  "event_name": "The 'Jimmy D' Carroll Valley Open 2026",
+  "year": 2026,
+  "_comment_files": "players_file/courses_file point at the roster and course data for THIS year. Currently seeded with the 2025 files for validation; make players_2026.json when the roster is set and update here.",
+  "players_file": "players_2025.json",
+  "courses_file": "courses.json",
+  "_comment_sheet": "ID of the Google Sheet the new system publishes to. LEAVE EMPTY until a NEW sheet is created for 2026 -- the 2025 sheet must not be overwritten. When empty, the pipeline writes local JSON only.",
+  "google_sheet_key": "1xkuYfhvUHg4cxq62D2Fw004zSReNUkEyWR8n5xc42sY",
+  "data_dir": "data_2026",
+  "_comment_rounds": "One entry per round. scoring_style: best_ball_individual | match_play | team_scramble | two_man_scramble. scrape_url: PlayThru leaderboard URL (null for manual-entry rounds). URLs below are the STILL-LIVE 2025 events, kept for end-to-end testing; replace with 2026 eids before the event.",
+  "rounds": {
+    "1": {
+      "name": "Round 1 - Best Ball Individual",
+      "scoring_style": "best_ball_individual",
+      "course": "Gettysburg National",
+      "scrape_url": "https://golf.golfplaythru.com/leaderboard.php?eid=36008&lhole=F",
+      "handicap_overrides": {
+        "Matt K": 16
+      }
+    },
+    "2": {
+      "name": "Round 2 - Match Play",
+      "scoring_style": "match_play",
+      "course": null,
+      "scrape_url": null
+    },
+    "3": {
+      "name": "Round 3 - Best Ball Individual",
+      "scoring_style": "best_ball_individual",
+      "course": "Carroll Valley",
+      "scrape_url": "https://golf.golfplaythru.com/leaderboard.php?eid=36010&lhole=F",
+      "handicap_overrides": {
+        "Matt K": 10
+      }
+    },
+    "4": {
+      "name": "Round 4 - Team Scramble",
+      "scoring_style": "team_scramble",
+      "course": "Carroll Valley",
+      "scrape_url": "https://golf.golfplaythru.com/leaderboard.php?eid=36004&lhole=F"
+    },
+    "5": {
+      "name": "Round 5 - Two-Man Scramble",
+      "scoring_style": "two_man_scramble",
+      "course": "The Links at Gettysburg",
+      "scrape_url": "https://golf.golfplaythru.com/leaderboard.php?eid=36005&lhole=F",
+      "pair_separator": " and "
+    }
+  }
+}
