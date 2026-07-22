@@ -97,6 +97,14 @@ html {
 }
 h1, h2, h3, h4 {
     font-family: 'Press Start 2P', cursive !important;
+    /* Explicit match to the leaderboard name/points weight (.lb-name/.lb-points
+       below) - without this, headings inherit Streamlit's own default weight
+       (600), one step lighter than the 700 those use. "Press Start 2P" only
+       ships one real weight, so browsers fake both via synthetic bold, and
+       the lighter-requested one renders visibly thinner even at a bigger
+       font-size - making headings read as SMALLER than leaderboard names
+       despite being ~30% bigger by actual font-size. */
+    font-weight: 700 !important;
     color: #ffa629 !important;
     text-shadow:
         3px 3px 0 #e63946,
