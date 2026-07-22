@@ -230,12 +230,13 @@ ARCADE_HI_SCORE = 38
 # gap/click most browsers introduce at the loop point with plain HTML5 audio
 # looping.
 #
-# Music defaults OFF (explicit opt-in via the panel's toggle) rather than
-# autoplaying - handy while developing/testing (repeatedly loading the app
-# doesn't pile up multiple overlapping loops), and a reasonable default for
-# real users too. The per-action SFX below are NOT gated by that toggle at
-# all - they're one-off clips triggered directly by a click, so they always
-# just play.
+# Music defaults ON, but does NOT autoplay on load - browsers block audio
+# until the user interacts with the page anyway. Instead it kicks off on the
+# first click in the app, which in a fresh arcade session is the click that
+# dismisses the intro/attract screen (see startMusicOnGesture below). The
+# panel's toggle can still turn it off (e.g. while developing). The per-action
+# SFX are NOT gated by the toggle at all - they're one-off clips triggered
+# directly by a click, so they always just play.
 #
 # As long as this exact HTML string keeps rendering at the same spot on
 # every Streamlit rerun, Streamlit reuses the same underlying iframe instead
@@ -271,7 +272,7 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
     font-size: 12px;
     box-sizing: border-box;
 ">
-  <button id="arcade-music-toggle" title="Turn background music on/off (off by default)" style="
+  <button id="arcade-music-toggle" title="Turn background music on/off (on by default)" style="
       font-size: 16px;
       line-height: 1;
       color: #ffa629;
@@ -281,7 +282,7 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
       padding: 3px 7px;
       cursor: pointer;
       flex-shrink: 0;
-  ">&#128263;</button>
+  ">&#128266;</button>
   <label style="display:flex; align-items:center; gap:6px; white-space:nowrap; flex:1; min-width:0;">
     VOL
     <input id="arcade-vol" type="range" min="0" max="100" value="35" style="flex:1; min-width:0;">
@@ -294,7 +295,7 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
   let musicGain = null;
   let musicBuffer = null;
   let musicSource = null;
-  let musicOn = false; // background loop defaults OFF - explicit opt-in only
+  let musicOn = true; // background loop defaults ON, started on first click (see startMusicOnGesture)
 
   const MUSIC_LOOP_SRC = "__MUSIC_LOOP__";
 
@@ -407,6 +408,24 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
     }
   });
 
+  // Kick the background loop off on a user gesture. Browsers won't let audio
+  // start without one, so this is wired to the first click in the app (which,
+  // in a fresh arcade session, is the click that dismisses the intro/attract
+  // screen). Idempotent and cheap to call on every click: it no-ops when music
+  // is toggled off, only ever builds the audio context once, and startMusicLoop
+  // itself no-ops once a source is already running.
+  function startMusicOnGesture() {
+    if (!musicOn) return;
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 1.0;
+      masterGain.connect(audioCtx.destination);
+    }
+    audioCtx.resume();
+    startMusicLoop();
+  }
+
   const volSlider = document.getElementById('arcade-vol');
   if (volSlider) volSlider.addEventListener('input', updateMusicVolume);
 
@@ -422,6 +441,10 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
     // Click sounds on real widgets in the parent page.
     parentDoc.addEventListener('click', function(e) {
       const target = e.target;
+      // Start the background loop on the first real click (the intro-screen
+      // dismissal in a fresh session). No-op after it's running / when music
+      // is off, so it's safe to call on every click.
+      startMusicOnGesture();
       // Any radio button, anywhere (sidebar page nav, in-page radio groups).
       if (target.closest('input[type="radio"], [role="radiogroup"] label')) {
         playSample('radio');
@@ -496,6 +519,7 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
     }, 1500);
   }
 
+  setMusicIcon(); // reflect the default (music on) in the toggle icon
   setupParentHooks();
 })();
 </script>
