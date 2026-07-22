@@ -564,7 +564,7 @@ def refresh_now():
 def card(title_html, right_html, color):
     st.markdown(f"""
     <div style="background: linear-gradient(90deg, #2c3e50 0%, #34495e 100%);
-                border-radius: 10px; padding: 15px; margin: 10px 0;
+                border-radius: 8px; padding: 8px 16px; margin: 6px 0;
                 border-left: 5px solid {color};">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>{title_html}</div>
@@ -601,8 +601,8 @@ def _pixel_star_svg(color='#e8b400'):
         f'<rect x="{x}" y="{y}" width="1" height="1" fill="{color}"/>'
         for x, y in _PIXEL_STAR_CELLS)
     return (
-        '<svg viewBox="0 0 7 7" width="1em" height="1em" '
-        'style="vertical-align:-0.15em;shape-rendering:crispEdges;" '
+        '<svg viewBox="0 0 7 7" width="0.9em" height="0.9em" '
+        'style="vertical-align:-0.1em;shape-rendering:crispEdges;" '
         f'xmlns="http://www.w3.org/2000/svg">{rects}</svg>')
 
 
@@ -645,11 +645,9 @@ def page_leaderboard(cfg, results):
             champion = champion_marker(cfg.players[pid])
             card(
                 f"<span class='lb-name' style='font-size:1.2em;font-weight:bold;color:#ecf0f1;'>"
-                f"#{rank} {e['name']} {champion}</span><br>"
-                f"<span class='lb-sub' style='color:#bdc3c7;font-size:0.9em;'>{e['team']}</span>",
+                f"#{rank} {e['name']} {champion}</span>",
                 f"<span class='lb-points' style='font-size:1.5em;font-weight:bold;color:#f39c12;'>"
-                f"{fmt_pts(e['total_points'])}</span><br>"
-                f"<span class='lb-points-sub' style='color:#bdc3c7;font-size:0.8em;'>points</span>",
+                f"{fmt_pts(e['total_points'])}</span>",
                 color)
 
     with col2:
