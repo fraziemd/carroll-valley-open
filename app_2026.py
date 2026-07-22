@@ -112,9 +112,16 @@ h1, h2, h3, h4 {
         0 0 12px rgba(255,166,41,0.45);
     line-height: 1.55 !important;
 }
-h1 { font-size: 1.35rem !important; }
-h2 { font-size: 1.1rem !important; }
-h3 { font-size: 0.9rem !important; }
+/* Pixel fonts like "Press Start 2P" render on a coarse internal grid, so
+   modest rem differences (e.g. the old 1.1rem h2 vs 0.85rem .lb-name) get
+   quantized away at these small absolute sizes - measured on an actual
+   rendered screenshot, that gap came out as just 11px vs 9px glyph height,
+   not enough to read as a clear size hierarchy at a glance, and .lb-points
+   (1.05rem) came out essentially tied with h2. These are bumped up enough
+   to be unambiguous even after that quantization. */
+h1 { font-size: 1.8rem !important; }
+h2 { font-size: 1.5rem !important; }
+h3 { font-size: 1.2rem !important; }
 
 /* Leaderboard name/points: classic arcade high-score tables don't jump
    between wildly different type sizes/fonts the way the default theme's
