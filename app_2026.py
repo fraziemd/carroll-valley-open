@@ -97,14 +97,6 @@ html {
 }
 h1, h2, h3, h4 {
     font-family: 'Press Start 2P', cursive !important;
-    /* Explicit match to the leaderboard name/points weight (.lb-name/.lb-points
-       below) - without this, headings inherit Streamlit's own default weight
-       (600), one step lighter than the 700 those use. "Press Start 2P" only
-       ships one real weight, so browsers fake both via synthetic bold, and
-       the lighter-requested one renders visibly thinner even at a bigger
-       font-size - making headings read as SMALLER than leaderboard names
-       despite being ~30% bigger by actual font-size. */
-    font-weight: 700 !important;
     color: #ffa629 !important;
     text-shadow:
         3px 3px 0 #e63946,
@@ -112,16 +104,9 @@ h1, h2, h3, h4 {
         0 0 12px rgba(255,166,41,0.45);
     line-height: 1.55 !important;
 }
-/* Pixel fonts like "Press Start 2P" render on a coarse internal grid, so
-   modest rem differences (e.g. the old 1.1rem h2 vs 0.85rem .lb-name) get
-   quantized away at these small absolute sizes - measured on an actual
-   rendered screenshot, that gap came out as just 11px vs 9px glyph height,
-   not enough to read as a clear size hierarchy at a glance, and .lb-points
-   (1.05rem) came out essentially tied with h2. These are bumped up enough
-   to be unambiguous even after that quantization. */
-h1 { font-size: 1.8rem !important; }
-h2 { font-size: 1.5rem !important; }
-h3 { font-size: 1.2rem !important; }
+h1 { font-size: 1.35rem !important; }
+h2 { font-size: 1.1rem !important; }
+h3 { font-size: 0.9rem !important; }
 
 /* Leaderboard name/points: classic arcade high-score tables don't jump
    between wildly different type sizes/fonts the way the default theme's
@@ -136,12 +121,18 @@ h3 { font-size: 1.2rem !important; }
     line-height: 1.5 !important;
     color: #f2f2f2 !important;
 }
+/* Points deliberately match .lb-name's size and carry only a minimal shadow.
+   At the previous 1.05rem + 2px red shadow they were a near-clone of h2
+   (1.1rem, orange, red shadow) - actually measuring taller than the section
+   headings on screen (digits are full-height glyphs) - which visually demoted
+   the real headings. The card hierarchy comes from color (orange vs white),
+   not from competing with headings on size. */
 .lb-points {
     font-family: 'Press Start 2P', cursive !important;
-    font-size: 1.05rem !important;
+    font-size: 0.85rem !important;
     line-height: 1.5 !important;
     color: #ffa629 !important;
-    text-shadow: 2px 2px 0 #e63946 !important;
+    text-shadow: 1px 1px 0 #e63946 !important;
 }
 .lb-sub {
     font-size: 0.78rem !important;
