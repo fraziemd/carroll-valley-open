@@ -235,12 +235,16 @@ ARCADE_HI_SCORE = 38
 # <script> tags injected through innerHTML/dangerouslySetInnerHTML - only a
 # real document (iframe) will run them.
 #
-# The background loop is a real sample track (music_preview/loop_1.mp3,
+# The background loop is a real sample track (music_preview/loop_2.mp3,
 # still a watermarked preview - swap for the purchased file before real
-# event use), decoded once into an AudioBuffer and looped sample-accurately
-# via Web Audio API rather than an <audio loop> tag, to avoid the small
-# gap/click most browsers introduce at the loop point with plain HTML5 audio
-# looping.
+# event use). On desktop it's decoded once into an AudioBuffer and looped
+# sample-accurately via Web Audio API rather than an <audio loop> tag, to
+# avoid the small gap/click most browsers introduce at the loop point with
+# plain HTML5 audio looping. On MOBILE it deliberately uses a plain looping
+# <audio> element instead - mobile browsers aggressively suspend Web Audio
+# contexts moments after each touch gesture (music died after ~2s per tap),
+# but treat <audio> as real media playback and let it keep playing (see
+# IS_MOBILE in the JS below).
 #
 # Music defaults ON, but does NOT autoplay on load - browsers block audio
 # until the user interacts with the page anyway. Instead it kicks off on the
@@ -311,6 +315,21 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
 
   const MUSIC_LOOP_SRC = "__MUSIC_LOOP__";
 
+  // Mobile browsers (iOS Safari/Chrome especially) treat Web Audio as
+  // ephemeral sound-effect audio and aggressively suspend the AudioContext
+  // moments after the triggering gesture ends - the loop dies after a second
+  // or two, revives briefly on each tap (our click hook calls resume()), and
+  // dies again. HTML5 <audio> elements are treated as MEDIA PLAYBACK instead
+  // and keep playing once started, so on touch devices the music uses a
+  // plain looping <audio> element. Web Audio stays on desktop because its
+  // loop is sample-accurate/gapless (HTML5 looping has a tiny seam, an
+  // acceptable trade on mobile where the alternative is silence).
+  // iPadOS reports itself as "MacIntel" but has multitouch, hence the
+  // maxTouchPoints check.
+  const IS_MOBILE = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+    || (navigator.maxTouchPoints > 1);
+  let musicEl = null; // the HTML5 fallback element (mobile only)
+
   // Sample-based SFX (real audio clips, embedded as data URIs by Python).
   // Each interaction TYPE has its own dedicated clip - never shared with a
   // different type of interaction - so the sound itself is a consistent cue
@@ -349,6 +368,7 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
 
   function updateMusicVolume() {
     if (musicGain) musicGain.gain.value = getVol();
+    if (musicEl) musicEl.volume = getVol();
   }
 
   function base64ToArrayBuffer(dataUri) {
@@ -398,6 +418,26 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
     }
   }
 
+  // Mobile path: plain looping <audio> element (see IS_MOBILE comment above).
+  // Idempotent - safe to call on every tap; play() only fires when paused,
+  // which also self-heals after OS-level interruptions (calls, Siri, etc.).
+  function startMusicHtml5() {
+    if (!MUSIC_LOOP_SRC) return;
+    if (!musicEl) {
+      musicEl = new Audio(MUSIC_LOOP_SRC);
+      musicEl.loop = true;
+      musicEl.setAttribute('playsinline', '');
+    }
+    musicEl.volume = getVol(); // no-op on iOS (volume is hardware-controlled there)
+    if (musicEl.paused) {
+      musicEl.play().catch(function() { /* ignore - e.g. no gesture yet */ });
+    }
+  }
+
+  function stopMusicHtml5() {
+    if (musicEl) musicEl.pause();
+  }
+
   function setMusicIcon() {
     document.getElementById('arcade-music-toggle').innerHTML =
       musicOn ? '&#128266;' : '&#128263;';
@@ -407,6 +447,10 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
     musicOn = !musicOn;
     setMusicIcon();
     if (musicOn) {
+      if (IS_MOBILE) {
+        startMusicHtml5();
+        return;
+      }
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         masterGain = audioCtx.createGain();
@@ -417,6 +461,7 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
       startMusicLoop();
     } else {
       stopMusicLoop();
+      stopMusicHtml5();
     }
   });
 
@@ -428,6 +473,12 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
   // itself no-ops once a source is already running.
   function startMusicOnGesture() {
     if (!musicOn) return;
+    if (IS_MOBILE) {
+      // Also doubles as self-healing: any later tap restarts the element if
+      // the OS paused it (audio interruption, tab backgrounded, etc.).
+      startMusicHtml5();
+      return;
+    }
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       masterGain = audioCtx.createGain();
