@@ -90,8 +90,14 @@ html {
 }
 /* Icons (expander arrows, checkboxes, etc.) are literal ligature text like
    "keyboard_arrow_right" rendered via a special icon font - excluded here so
-   they don't turn into garbled overlapping text. */
-.stApp span:not([aria-hidden="true"]):not([data-testid="stIconMaterial"]):not(.lb-name):not(.lb-points) {
+   they don't turn into garbled overlapping text.
+   Heading-internal spans (h1-h4) are excluded too: Streamlit Cloud's build
+   wraps heading text in an inner <span> (locally the text is a direct child
+   of the h tag), and without the exclusion this rule hijacked every deployed
+   heading's text into VT323 - thin and small - while the h1-h4 rule below
+   only got to style the color/shadow. That was the "headings look tiny/wrong
+   on the live site but fine locally" bug. */
+.stApp span:not([aria-hidden="true"]):not([data-testid="stIconMaterial"]):not(.lb-name):not(.lb-points):not(h1 span):not(h2 span):not(h3 span):not(h4 span) {
     font-family: 'VT323', monospace !important;
     letter-spacing: 0.3px;
 }
@@ -107,6 +113,12 @@ h1, h2, h3, h4 {
 h1 { font-size: 1.35rem !important; }
 h2 { font-size: 1.1rem !important; }
 h3 { font-size: 0.9rem !important; }
+/* Explicit (not just excluded-from-VT323 above): heading text on Streamlit
+   Cloud lives in an inner span, and it must render in the heading font. */
+h1 span, h2 span, h3 span, h4 span {
+    font-family: 'Press Start 2P', cursive !important;
+    letter-spacing: normal !important;
+}
 
 /* Leaderboard name/points: classic arcade high-score tables don't jump
    between wildly different type sizes/fonts the way the default theme's
@@ -121,18 +133,12 @@ h3 { font-size: 0.9rem !important; }
     line-height: 1.5 !important;
     color: #f2f2f2 !important;
 }
-/* Points deliberately match .lb-name's size and carry only a minimal shadow.
-   At the previous 1.05rem + 2px red shadow they were a near-clone of h2
-   (1.1rem, orange, red shadow) - actually measuring taller than the section
-   headings on screen (digits are full-height glyphs) - which visually demoted
-   the real headings. The card hierarchy comes from color (orange vs white),
-   not from competing with headings on size. */
 .lb-points {
     font-family: 'Press Start 2P', cursive !important;
-    font-size: 0.85rem !important;
+    font-size: 1.05rem !important;
     line-height: 1.5 !important;
     color: #ffa629 !important;
-    text-shadow: 1px 1px 0 #e63946 !important;
+    text-shadow: 2px 2px 0 #e63946 !important;
 }
 .lb-sub {
     font-size: 0.78rem !important;
