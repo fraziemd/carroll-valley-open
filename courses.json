@@ -2,69 +2,307 @@
   "courses": {
     "Carroll Valley": {
       "holes": {
-        "1": {"par": 5, "handicap": 8},
-        "2": {"par": 4, "handicap": 7},
-        "3": {"par": 3, "handicap": 18},
-        "4": {"par": 5, "handicap": 1},
-        "5": {"par": 3, "handicap": 15},
-        "6": {"par": 4, "handicap": 11},
-        "7": {"par": 4, "handicap": 10},
-        "8": {"par": 3, "handicap": 12},
-        "9": {"par": 5, "handicap": 3},
-        "10": {"par": 4, "handicap": 6},
-        "11": {"par": 3, "handicap": 13},
-        "12": {"par": 5, "handicap": 4},
-        "13": {"par": 4, "handicap": 9},
-        "14": {"par": 4, "handicap": 5},
-        "15": {"par": 3, "handicap": 16},
-        "16": {"par": 4, "handicap": 2},
-        "17": {"par": 5, "handicap": 14},
-        "18": {"par": 3, "handicap": 17}
+        "1": {
+          "par": 5,
+          "handicap": 8
+        },
+        "2": {
+          "par": 4,
+          "handicap": 7
+        },
+        "3": {
+          "par": 3,
+          "handicap": 18
+        },
+        "4": {
+          "par": 5,
+          "handicap": 1
+        },
+        "5": {
+          "par": 3,
+          "handicap": 15
+        },
+        "6": {
+          "par": 4,
+          "handicap": 11
+        },
+        "7": {
+          "par": 4,
+          "handicap": 10
+        },
+        "8": {
+          "par": 3,
+          "handicap": 12
+        },
+        "9": {
+          "par": 5,
+          "handicap": 3
+        },
+        "10": {
+          "par": 4,
+          "handicap": 6
+        },
+        "11": {
+          "par": 3,
+          "handicap": 13
+        },
+        "12": {
+          "par": 5,
+          "handicap": 4
+        },
+        "13": {
+          "par": 4,
+          "handicap": 9
+        },
+        "14": {
+          "par": 4,
+          "handicap": 5
+        },
+        "15": {
+          "par": 3,
+          "handicap": 16
+        },
+        "16": {
+          "par": 4,
+          "handicap": 2
+        },
+        "17": {
+          "par": 5,
+          "handicap": 14
+        },
+        "18": {
+          "par": 3,
+          "handicap": 17
+        }
       }
     },
     "Gettysburg National": {
       "holes": {
-        "1": {"par": 4, "handicap": 6},
-        "2": {"par": 4, "handicap": 10},
-        "3": {"par": 3, "handicap": 18},
-        "4": {"par": 4, "handicap": 12},
-        "5": {"par": 4, "handicap": 8},
-        "6": {"par": 4, "handicap": 2},
-        "7": {"par": 3, "handicap": 16},
-        "8": {"par": 5, "handicap": 4},
-        "9": {"par": 4, "handicap": 14},
-        "10": {"par": 4, "handicap": 11},
-        "11": {"par": 4, "handicap": 5},
-        "12": {"par": 3, "handicap": 15},
-        "13": {"par": 4, "handicap": 7},
-        "14": {"par": 5, "handicap": 9},
-        "15": {"par": 4, "handicap": 13},
-        "16": {"par": 4, "handicap": 1},
-        "17": {"par": 3, "handicap": 17},
-        "18": {"par": 5, "handicap": 3}
+        "1": {
+          "par": 4,
+          "handicap": 6
+        },
+        "2": {
+          "par": 4,
+          "handicap": 10
+        },
+        "3": {
+          "par": 3,
+          "handicap": 18
+        },
+        "4": {
+          "par": 4,
+          "handicap": 12
+        },
+        "5": {
+          "par": 4,
+          "handicap": 8
+        },
+        "6": {
+          "par": 4,
+          "handicap": 2
+        },
+        "7": {
+          "par": 3,
+          "handicap": 16
+        },
+        "8": {
+          "par": 5,
+          "handicap": 4
+        },
+        "9": {
+          "par": 4,
+          "handicap": 14
+        },
+        "10": {
+          "par": 4,
+          "handicap": 11
+        },
+        "11": {
+          "par": 4,
+          "handicap": 5
+        },
+        "12": {
+          "par": 3,
+          "handicap": 15
+        },
+        "13": {
+          "par": 4,
+          "handicap": 7
+        },
+        "14": {
+          "par": 5,
+          "handicap": 9
+        },
+        "15": {
+          "par": 4,
+          "handicap": 13
+        },
+        "16": {
+          "par": 4,
+          "handicap": 1
+        },
+        "17": {
+          "par": 3,
+          "handicap": 17
+        },
+        "18": {
+          "par": 5,
+          "handicap": 3
+        }
       }
     },
     "The Links at Gettysburg": {
       "holes": {
-        "1": {"par": 4, "handicap": 9},
-        "2": {"par": 4, "handicap": 15},
-        "3": {"par": 3, "handicap": 11},
-        "4": {"par": 4, "handicap": 1},
-        "5": {"par": 5, "handicap": 5},
-        "6": {"par": 3, "handicap": 13},
-        "7": {"par": 4, "handicap": 3},
-        "8": {"par": 4, "handicap": 7},
-        "9": {"par": 5, "handicap": 17},
-        "10": {"par": 4, "handicap": 6},
-        "11": {"par": 4, "handicap": 4},
-        "12": {"par": 3, "handicap": 10},
-        "13": {"par": 5, "handicap": 18},
-        "14": {"par": 4, "handicap": 12},
-        "15": {"par": 3, "handicap": 16},
-        "16": {"par": 5, "handicap": 2},
-        "17": {"par": 4, "handicap": 14},
-        "18": {"par": 4, "handicap": 8}
+        "1": {
+          "par": 4,
+          "handicap": 9
+        },
+        "2": {
+          "par": 4,
+          "handicap": 15
+        },
+        "3": {
+          "par": 3,
+          "handicap": 11
+        },
+        "4": {
+          "par": 4,
+          "handicap": 1
+        },
+        "5": {
+          "par": 5,
+          "handicap": 5
+        },
+        "6": {
+          "par": 3,
+          "handicap": 13
+        },
+        "7": {
+          "par": 4,
+          "handicap": 3
+        },
+        "8": {
+          "par": 4,
+          "handicap": 7
+        },
+        "9": {
+          "par": 5,
+          "handicap": 17
+        },
+        "10": {
+          "par": 4,
+          "handicap": 6
+        },
+        "11": {
+          "par": 4,
+          "handicap": 4
+        },
+        "12": {
+          "par": 3,
+          "handicap": 10
+        },
+        "13": {
+          "par": 5,
+          "handicap": 18
+        },
+        "14": {
+          "par": 4,
+          "handicap": 12
+        },
+        "15": {
+          "par": 3,
+          "handicap": 16
+        },
+        "16": {
+          "par": 5,
+          "handicap": 2
+        },
+        "17": {
+          "par": 4,
+          "handicap": 14
+        },
+        "18": {
+          "par": 4,
+          "handicap": 8
+        }
+      }
+    },
+    "Penn National Founders": {
+      "holes": {
+        "1": {
+          "par": 4,
+          "handicap": 17
+        },
+        "2": {
+          "par": 5,
+          "handicap": 5
+        },
+        "3": {
+          "par": 3,
+          "handicap": 13
+        },
+        "4": {
+          "par": 4,
+          "handicap": 9
+        },
+        "5": {
+          "par": 4,
+          "handicap": 7
+        },
+        "6": {
+          "par": 4,
+          "handicap": 1
+        },
+        "7": {
+          "par": 5,
+          "handicap": 11
+        },
+        "8": {
+          "par": 4,
+          "handicap": 3
+        },
+        "9": {
+          "par": 3,
+          "handicap": 15
+        },
+        "10": {
+          "par": 5,
+          "handicap": 14
+        },
+        "11": {
+          "par": 4,
+          "handicap": 12
+        },
+        "12": {
+          "par": 4,
+          "handicap": 6
+        },
+        "13": {
+          "par": 3,
+          "handicap": 18
+        },
+        "14": {
+          "par": 5,
+          "handicap": 2
+        },
+        "15": {
+          "par": 4,
+          "handicap": 10
+        },
+        "16": {
+          "par": 4,
+          "handicap": 4
+        },
+        "17": {
+          "par": 3,
+          "handicap": 16
+        },
+        "18": {
+          "par": 4,
+          "handicap": 8
+        }
       }
     }
   }
-} 
+}

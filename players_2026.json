@@ -1,0 +1,546 @@
+{
+  "_comment": "JDCVO 2026 roster. Foursomes from the final list circulated 2026-07-27. round_N_partner is the player's pair partner; round_N_foursome is the OTHER pair in their group (same convention as players_2025.json). Rounds: 1=Fri AM best ball (Penn National Founders), 2=Fri 2:00 skins within foursome (Carroll Valley), 3=Sat 8:00 best ball (Carroll Valley), 4=Sat 2:00 team scramble (Carroll Valley) - no pairings, the whole team is the group, so no round_4_* fields exist, 5=Sun 9:00 two-man scramble (Gettysburg National). Round 2 pairs deliberately ignore team affiliation; the other paired rounds pair within a team and never put two pairs from the same team in one foursome.",
+  "players": {
+    "joe_m": {
+      "name": "Joe M",
+      "team": "Orange",
+      "senior": false,
+      "handicap": 0,
+      "past_champion": true,
+      "current_champion": true,
+      "round_1_partner": "Tophe",
+      "round_1_foursome": [
+        "Tbone",
+        "Oaks"
+      ],
+      "round_2_partner": "Tbone",
+      "round_2_foursome": [
+        "Ben",
+        "Tim"
+      ],
+      "round_3_partner": "Tommy W",
+      "round_3_foursome": [
+        "Vince",
+        "Matt"
+      ],
+      "round_5_partner": "Trock",
+      "round_5_foursome": [
+        "Tbone",
+        "Harvey"
+      ]
+    },
+    "tophe": {
+      "name": "Tophe",
+      "team": "Orange",
+      "senior": false,
+      "handicap": 15,
+      "past_champion": true,
+      "round_1_partner": "Joe M",
+      "round_1_foursome": [
+        "Tbone",
+        "Oaks"
+      ],
+      "round_2_partner": "Matt",
+      "round_2_foursome": [
+        "Oaks",
+        "Tom K"
+      ],
+      "round_3_partner": "Trock",
+      "round_3_foursome": [
+        "Pete",
+        "Jim F"
+      ],
+      "round_5_partner": "Tommy W",
+      "round_5_foursome": [
+        "Oaks",
+        "Tom K"
+      ]
+    },
+    "tommy_w": {
+      "name": "Tommy W",
+      "team": "Orange",
+      "senior": false,
+      "handicap": 20,
+      "past_champion": false,
+      "round_1_partner": "Trock",
+      "round_1_foursome": [
+        "Vince",
+        "Frazier"
+      ],
+      "round_2_partner": "Chris G",
+      "round_2_foursome": [
+        "Patrick",
+        "Harvey"
+      ],
+      "round_3_partner": "Joe M",
+      "round_3_foursome": [
+        "Vince",
+        "Matt"
+      ],
+      "round_5_partner": "Tophe",
+      "round_5_foursome": [
+        "Oaks",
+        "Tom K"
+      ]
+    },
+    "trock": {
+      "name": "Trock",
+      "team": "Orange",
+      "senior": false,
+      "handicap": 30,
+      "past_champion": false,
+      "round_1_partner": "Tommy W",
+      "round_1_foursome": [
+        "Vince",
+        "Frazier"
+      ],
+      "round_2_partner": "Dan",
+      "round_2_foursome": [
+        "Jim F",
+        "Dave"
+      ],
+      "round_3_partner": "Tophe",
+      "round_3_foursome": [
+        "Pete",
+        "Jim F"
+      ],
+      "round_5_partner": "Joe M",
+      "round_5_foursome": [
+        "Tbone",
+        "Harvey"
+      ]
+    },
+    "ben": {
+      "name": "Ben",
+      "team": "Blue",
+      "senior": false,
+      "handicap": 5,
+      "past_champion": true,
+      "round_1_partner": "Pete",
+      "round_1_foursome": [
+        "Matt",
+        "Dave"
+      ],
+      "round_2_partner": "Tim",
+      "round_2_foursome": [
+        "Joe M",
+        "Tbone"
+      ],
+      "round_3_partner": "Chris G",
+      "round_3_foursome": [
+        "Tbone",
+        "Tom K"
+      ],
+      "round_5_partner": "Jim F",
+      "round_5_foursome": [
+        "Vince",
+        "Dave"
+      ]
+    },
+    "pete": {
+      "name": "Pete",
+      "team": "Blue",
+      "senior": false,
+      "handicap": 13,
+      "past_champion": true,
+      "round_1_partner": "Ben",
+      "round_1_foursome": [
+        "Matt",
+        "Dave"
+      ],
+      "round_2_partner": "Frazier",
+      "round_2_foursome": [
+        "Vince",
+        "Uncle Joe"
+      ],
+      "round_3_partner": "Jim F",
+      "round_3_foursome": [
+        "Tophe",
+        "Trock"
+      ],
+      "round_5_partner": "Chris G",
+      "round_5_foursome": [
+        "Tim",
+        "Dan"
+      ]
+    },
+    "chris_g": {
+      "name": "Chris G",
+      "team": "Blue",
+      "senior": false,
+      "handicap": 19,
+      "past_champion": false,
+      "round_1_partner": "Jim F",
+      "round_1_foursome": [
+        "Tim",
+        "Uncle Joe"
+      ],
+      "round_2_partner": "Tommy W",
+      "round_2_foursome": [
+        "Patrick",
+        "Harvey"
+      ],
+      "round_3_partner": "Ben",
+      "round_3_foursome": [
+        "Tbone",
+        "Tom K"
+      ],
+      "round_5_partner": "Pete",
+      "round_5_foursome": [
+        "Tim",
+        "Dan"
+      ]
+    },
+    "jim_f": {
+      "name": "Jim F",
+      "team": "Blue",
+      "senior": false,
+      "handicap": 23,
+      "past_champion": false,
+      "round_1_partner": "Chris G",
+      "round_1_foursome": [
+        "Tim",
+        "Uncle Joe"
+      ],
+      "round_2_partner": "Dave",
+      "round_2_foursome": [
+        "Dan",
+        "Trock"
+      ],
+      "round_3_partner": "Pete",
+      "round_3_foursome": [
+        "Tophe",
+        "Trock"
+      ],
+      "round_5_partner": "Ben",
+      "round_5_foursome": [
+        "Vince",
+        "Dave"
+      ]
+    },
+    "tim": {
+      "name": "Tim",
+      "team": "Green",
+      "senior": false,
+      "handicap": 7,
+      "past_champion": true,
+      "round_1_partner": "Uncle Joe",
+      "round_1_foursome": [
+        "Chris G",
+        "Jim F"
+      ],
+      "round_2_partner": "Ben",
+      "round_2_foursome": [
+        "Joe M",
+        "Tbone"
+      ],
+      "round_3_partner": "Patrick",
+      "round_3_foursome": [
+        "Frazier",
+        "Dave"
+      ],
+      "round_5_partner": "Dan",
+      "round_5_foursome": [
+        "Pete",
+        "Chris G"
+      ]
+    },
+    "uncle_joe": {
+      "name": "Uncle Joe",
+      "team": "Green",
+      "senior": true,
+      "handicap": 14,
+      "past_champion": false,
+      "round_1_partner": "Tim",
+      "round_1_foursome": [
+        "Chris G",
+        "Jim F"
+      ],
+      "round_2_partner": "Vince",
+      "round_2_foursome": [
+        "Pete",
+        "Frazier"
+      ],
+      "round_3_partner": "Dan",
+      "round_3_foursome": [
+        "Oaks",
+        "Harvey"
+      ],
+      "round_5_partner": "Patrick",
+      "round_5_foursome": [
+        "Frazier",
+        "Matt"
+      ]
+    },
+    "patrick": {
+      "name": "Patrick",
+      "team": "Green",
+      "senior": false,
+      "handicap": 19,
+      "past_champion": false,
+      "round_1_partner": "Dan",
+      "round_1_foursome": [
+        "Tom K",
+        "Harvey"
+      ],
+      "round_2_partner": "Harvey",
+      "round_2_foursome": [
+        "Chris G",
+        "Tommy W"
+      ],
+      "round_3_partner": "Tim",
+      "round_3_foursome": [
+        "Frazier",
+        "Dave"
+      ],
+      "round_5_partner": "Uncle Joe",
+      "round_5_foursome": [
+        "Frazier",
+        "Matt"
+      ]
+    },
+    "dan": {
+      "name": "Dan",
+      "team": "Green",
+      "senior": false,
+      "handicap": 23,
+      "past_champion": false,
+      "round_1_partner": "Patrick",
+      "round_1_foursome": [
+        "Tom K",
+        "Harvey"
+      ],
+      "round_2_partner": "Trock",
+      "round_2_foursome": [
+        "Jim F",
+        "Dave"
+      ],
+      "round_3_partner": "Uncle Joe",
+      "round_3_foursome": [
+        "Oaks",
+        "Harvey"
+      ],
+      "round_5_partner": "Tim",
+      "round_5_foursome": [
+        "Pete",
+        "Chris G"
+      ]
+    },
+    "tbone": {
+      "name": "Tbone",
+      "team": "Black",
+      "senior": false,
+      "handicap": 11,
+      "past_champion": true,
+      "round_1_partner": "Oaks",
+      "round_1_foursome": [
+        "Joe M",
+        "Tophe"
+      ],
+      "round_2_partner": "Joe M",
+      "round_2_foursome": [
+        "Ben",
+        "Tim"
+      ],
+      "round_3_partner": "Tom K",
+      "round_3_foursome": [
+        "Ben",
+        "Chris G"
+      ],
+      "round_5_partner": "Harvey",
+      "round_5_foursome": [
+        "Joe M",
+        "Trock"
+      ]
+    },
+    "oaks": {
+      "name": "Oaks",
+      "team": "Black",
+      "senior": false,
+      "handicap": 14,
+      "past_champion": true,
+      "round_1_partner": "Tbone",
+      "round_1_foursome": [
+        "Joe M",
+        "Tophe"
+      ],
+      "round_2_partner": "Tom K",
+      "round_2_foursome": [
+        "Tophe",
+        "Matt"
+      ],
+      "round_3_partner": "Harvey",
+      "round_3_foursome": [
+        "Uncle Joe",
+        "Dan"
+      ],
+      "round_5_partner": "Tom K",
+      "round_5_foursome": [
+        "Tophe",
+        "Tommy W"
+      ]
+    },
+    "tom_k": {
+      "name": "Tom K",
+      "team": "Black",
+      "senior": false,
+      "handicap": 18,
+      "past_champion": false,
+      "round_1_partner": "Harvey",
+      "round_1_foursome": [
+        "Patrick",
+        "Dan"
+      ],
+      "round_2_partner": "Oaks",
+      "round_2_foursome": [
+        "Tophe",
+        "Matt"
+      ],
+      "round_3_partner": "Tbone",
+      "round_3_foursome": [
+        "Ben",
+        "Chris G"
+      ],
+      "round_5_partner": "Oaks",
+      "round_5_foursome": [
+        "Tophe",
+        "Tommy W"
+      ]
+    },
+    "harvey": {
+      "name": "Harvey",
+      "team": "Black",
+      "senior": false,
+      "handicap": 22,
+      "past_champion": false,
+      "round_1_partner": "Tom K",
+      "round_1_foursome": [
+        "Patrick",
+        "Dan"
+      ],
+      "round_2_partner": "Patrick",
+      "round_2_foursome": [
+        "Chris G",
+        "Tommy W"
+      ],
+      "round_3_partner": "Oaks",
+      "round_3_foursome": [
+        "Uncle Joe",
+        "Dan"
+      ],
+      "round_5_partner": "Tbone",
+      "round_5_foursome": [
+        "Joe M",
+        "Trock"
+      ]
+    },
+    "vince": {
+      "name": "Vince",
+      "team": "White",
+      "senior": false,
+      "handicap": 12,
+      "past_champion": false,
+      "round_1_partner": "Frazier",
+      "round_1_foursome": [
+        "Tommy W",
+        "Trock"
+      ],
+      "round_2_partner": "Uncle Joe",
+      "round_2_foursome": [
+        "Pete",
+        "Frazier"
+      ],
+      "round_3_partner": "Matt",
+      "round_3_foursome": [
+        "Joe M",
+        "Tommy W"
+      ],
+      "round_5_partner": "Dave",
+      "round_5_foursome": [
+        "Ben",
+        "Jim F"
+      ]
+    },
+    "frazier": {
+      "name": "Frazier",
+      "team": "White",
+      "senior": false,
+      "handicap": 12,
+      "past_champion": true,
+      "round_1_partner": "Vince",
+      "round_1_foursome": [
+        "Tommy W",
+        "Trock"
+      ],
+      "round_2_partner": "Pete",
+      "round_2_foursome": [
+        "Vince",
+        "Uncle Joe"
+      ],
+      "round_3_partner": "Dave",
+      "round_3_foursome": [
+        "Tim",
+        "Patrick"
+      ],
+      "round_5_partner": "Matt",
+      "round_5_foursome": [
+        "Uncle Joe",
+        "Patrick"
+      ]
+    },
+    "matt": {
+      "name": "Matt",
+      "team": "White",
+      "senior": false,
+      "handicap": 15,
+      "past_champion": true,
+      "round_1_partner": "Dave",
+      "round_1_foursome": [
+        "Ben",
+        "Pete"
+      ],
+      "round_2_partner": "Tophe",
+      "round_2_foursome": [
+        "Oaks",
+        "Tom K"
+      ],
+      "round_3_partner": "Vince",
+      "round_3_foursome": [
+        "Joe M",
+        "Tommy W"
+      ],
+      "round_5_partner": "Frazier",
+      "round_5_foursome": [
+        "Uncle Joe",
+        "Patrick"
+      ]
+    },
+    "dave": {
+      "name": "Dave",
+      "team": "White",
+      "senior": false,
+      "handicap": 23,
+      "past_champion": false,
+      "round_1_partner": "Matt",
+      "round_1_foursome": [
+        "Ben",
+        "Pete"
+      ],
+      "round_2_partner": "Jim F",
+      "round_2_foursome": [
+        "Dan",
+        "Trock"
+      ],
+      "round_3_partner": "Frazier",
+      "round_3_foursome": [
+        "Tim",
+        "Patrick"
+      ],
+      "round_5_partner": "Vince",
+      "round_5_foursome": [
+        "Ben",
+        "Jim F"
+      ]
+    }
+  }
+}
