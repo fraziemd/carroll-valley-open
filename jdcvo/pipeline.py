@@ -12,8 +12,8 @@ Flow per cycle:
 2. Apply manual hole-score corrections on top of the raw scores.
 3. Infer each round's status (not_started / live / complete) and apply any
    manual override. Only live/complete rounds score points.
-4. Score every active round with the pure engine, add putt-off, extras, and
-   adjustments, and build the leaderboards.
+4. Score every active round with the pure engine, add extras and adjustments,
+   and build the leaderboards.
 5. Write results.json + a timestamped history snapshot locally; publish to
    Google Sheets when a sheet key is configured.
 """
@@ -25,9 +25,6 @@ from datetime import datetime
 from . import scoring, state
 from .config import EventConfig
 from .store import LocalStore
-
-PUTTOFF_FIRST_POINTS = 2
-PUTTOFF_SECOND_POINTS = 1
 
 
 def apply_corrections(scores, corrections, round_number):
@@ -94,7 +91,7 @@ def compute_results(cfg, raw, manual, round_states, log=print):
     """Pure computation step: corrected scores -> statuses -> points -> boards.
 
     ``raw``: {round_number(int): [score entries]}
-    ``manual``: dict with extras/corrections/match_play/puttoff/adjustments
+    ``manual``: dict with extras/corrections/match_play/adjustments
     ``round_states``: {str(round): {'override_status', 'locked'}}
     Returns the full results dict (JSON-serializable).
     """
@@ -129,17 +126,6 @@ def compute_results(cfg, raw, manual, round_states, log=print):
                                 if name in name_to_id}
         breakdowns[str(n)] = breakdown
         details[str(n)] = round_details
-
-    # Putt-off
-    puttoff = manual['puttoff']
-    if puttoff.get('first'):
-        pts = {}
-        for pid, p in cfg.players.items():
-            if p['team'] == puttoff['first']:
-                pts[pid] = PUTTOFF_FIRST_POINTS
-            elif p['team'] == puttoff.get('second'):
-                pts[pid] = PUTTOFF_SECOND_POINTS
-        round_points['puttoff'] = pts
 
     # Extras + adjustments (both accumulate into the 'extras' bucket)
     extras = {}
@@ -182,7 +168,7 @@ def run_pipeline(config_path='event_2026.json', scrape=True, log=print,
     """Run one full cycle.
 
     When a Google Sheet is configured, manual inputs (extras, corrections,
-    match play, putt-off, adjustments) and round state come FROM THE SHEET -
+    match play, adjustments) and round state come FROM THE SHEET -
     that's the durable, shared store that the admin app and committee edit.
     Local JSON files are the store in dev/no-sheet mode, and results/raw
     scores are always also written locally as backup.
@@ -202,7 +188,6 @@ def run_pipeline(config_path='event_2026.json', scrape=True, log=print,
         'extras': source.read_extras(),
         'corrections': source.read_corrections(),
         'match_play': source.read_match_play(),
-        'puttoff': source.read_puttoff(),
         'adjustments': source.read_adjustments(),
     }
     round_states = source.read_round_state()

@@ -8,7 +8,7 @@ Two layers, used together:
   snapshot under data_2026/history/ so no state is ever lost.
 
 - SheetsStore: Google Sheets, the shared human-readable store in production.
-  Manual inputs (extras, corrections, match play, putt-off, round status
+  Manual inputs (extras, corrections, match play, round status
   overrides) live in dedicated worksheets so the admin app, the pipeline, and
   any committee member looking at the sheet all see the same data.
 
@@ -21,7 +21,6 @@ Manual-input schemas (JSON files and worksheet columns):
 - corrections.json: [{"round": 1, "entity": "Pete", "hole": "7", "score": 5,
                       "note": ""}]  # entity = player, team, or pair name
 - match_play.json:  [{"players": ["Andrew", "Tom K"], "points": 3.75}]
-- puttoff.json:     {"first": "White", "second": "Blue"}
 - adjustments.json: [{"player": "Pete", "points": 4.5, "note": ""}]
 - round_state.json: {"1": {"override_status": null, "locked": false}, ...}
 """
@@ -81,12 +80,6 @@ class LocalStore:
     def write_match_play(self, results):
         self._write_json('match_play.json', results)
 
-    def read_puttoff(self):
-        return self._read_json('puttoff.json', {})
-
-    def write_puttoff(self, result):
-        self._write_json('puttoff.json', result)
-
     def read_adjustments(self):
         return self._read_json('adjustments.json', [])
 
@@ -121,7 +114,6 @@ MANUAL_WORKSHEETS = {
     'Extras': (['Round', 'Player', 'Category', 'Points', 'Note'], 'rows'),
     'Corrections': (['Round', 'Entity', 'Hole', 'Score', 'Note'], 'rows'),
     'Match Play': (['Player 1', 'Player 2', 'Points'], 'rows'),
-    'Putt-Off': (['First Place Team', 'Second Place Team'], 'rows'),
     'Adjustments': (['Player', 'Points', 'Note'], 'rows'),
     'Round Status': (['Round', 'Inferred Status', 'Override Status', 'Locked'], 'rows'),
 }
@@ -247,13 +239,6 @@ class SheetsStore:
         return [{'players': [r['Player 1'], r['Player 2']], 'points': r['Points']}
                 for r in rows if r.get('Player 1')]
 
-    def read_puttoff(self):
-        rows = self._read_rows('Putt-Off')
-        if rows and rows[0].get('First Place Team'):
-            return {'first': rows[0]['First Place Team'],
-                    'second': rows[0].get('Second Place Team', '')}
-        return {}
-
     def read_adjustments(self):
         rows = self._read_rows('Adjustments')
         return [{'player': r['Player'], 'points': r['Points'],
@@ -300,13 +285,6 @@ class SheetsStore:
         self._retry(ws.append_row, [player1, player2, points])
         self._invalidate_cache()
 
-    def set_puttoff(self, first, second):
-        headers = MANUAL_WORKSHEETS['Putt-Off'][0]
-        ws = self._worksheet('Putt-Off', headers)
-        self._retry(ws.clear)
-        self._retry(ws.update, [headers, [first, second]])
-        self._invalidate_cache()
-
     def append_adjustment(self, player, points, note=''):
         ws = self._worksheet('Adjustments', MANUAL_WORKSHEETS['Adjustments'][0])
         self._retry(ws.append_row, [player, points, note])
@@ -333,14 +311,14 @@ class SheetsStore:
         team = results['leaderboard']['team']
 
         ind_rows = [['Rank', 'Player', 'Team', 'Total'] +
-                    [f'R{n}' for n in round_numbers] + ['Putt-Off', 'Extras']]
+                    [f'R{n}' for n in round_numbers] + ['Extras']]
         standings = sorted(individual.values(), key=lambda e: -e['total_points'])
         for rank, entry in enumerate(standings, 1):
             rs = entry['round_scores']
             ind_rows.append(
                 [rank, entry['name'], entry['team'], round(entry['total_points'], 2)] +
                 [rs.get(str(n), rs.get(n, 0)) for n in round_numbers] +
-                [rs.get('puttoff', 0), rs.get('extras', 0)])
+                [rs.get('extras', 0)])
 
         team_rows = [['Rank', 'Team', 'Total', 'Players']]
         id_names = {pid: e['name'] for pid, e in individual.items()}

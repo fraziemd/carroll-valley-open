@@ -4,7 +4,7 @@ Public side: live leaderboards with drill-downs into players, teams, and
 rounds showing exactly where every point came from.
 
 Admin side (password-protected, in the sidebar): pull latest scores, fix hole
-scores, enter extras / match play / putt-off / adjustments, and control each
+scores, enter extras / match play / adjustments, and control each
 round's status (auto-inferred, with manual override and lock).
 
 Data flow:
@@ -661,8 +661,6 @@ def card(title_html, right_html, color):
 
 
 def round_label(cfg, round_key):
-    if round_key == 'puttoff':
-        return 'Putt-Off'
     if round_key == 'extras':
         return 'Extras'
     return cfg.round_config(round_key).get('name', f'Round {round_key}')
@@ -760,7 +758,6 @@ def page_leaderboard(cfg, results):
         row = {'Player': e['name'], 'Team': e['team']}
         for n in cfg.round_numbers():
             row[f'R{n}'] = e['round_scores'].get(str(n), 0)
-        row['Putt-Off'] = e['round_scores'].get('puttoff', 0)
         row['Extras'] = e['round_scores'].get('extras', 0)
         row['Total'] = e['total_points']
         rows.append(row)
@@ -792,10 +789,6 @@ def _player_round_detail(cfg, results, round_key, name, pid):
         rows = [r for r in results['extras_detail'] if r['player'] == name]
         if rows:
             st.dataframe(pd.DataFrame(rows), width='stretch', hide_index=True)
-        return
-
-    if round_key == 'puttoff':
-        st.write("Putt-Off team result points.")
         return
 
     b = breakdowns.get(str(round_key), {})
@@ -860,7 +853,6 @@ def page_team(cfg, results):
         row = {'Player': e['name']}
         for n in cfg.round_numbers():
             row[f'R{n}'] = e['round_scores'].get(str(n), 0)
-        row['Putt-Off'] = e['round_scores'].get('puttoff', 0)
         row['Extras'] = e['round_scores'].get('extras', 0)
         row['Total'] = e['total_points']
         rows.append(row)
@@ -868,7 +860,6 @@ def page_team(cfg, results):
     st.dataframe(df, width='stretch', hide_index=True)
 
     totals = {f'R{n}': df[f'R{n}'].sum() for n in cfg.round_numbers()}
-    totals['Putt-Off'] = df['Putt-Off'].sum()
     totals['Extras'] = df['Extras'].sum()
     st.markdown("**Points by round:** " + " · ".join(
         f"{k}: {fmt_pts(v)}" for k, v in totals.items()))
@@ -963,9 +954,8 @@ def page_admin(cfg, results, logs):
     with st.expander("Last pipeline log"):
         st.text("\n".join(logs))
 
-    tab_status, tab_fix, tab_extras, tab_match, tab_putt, tab_adjust = st.tabs(
-        ["Round status", "Fix a score", "Extras", "Match play", "Putt-off",
-         "Adjustments"])
+    tab_status, tab_fix, tab_extras, tab_match, tab_adjust = st.tabs(
+        ["Round status", "Fix a score", "Extras", "Match play", "Adjustments"])
 
     local = LocalStore(cfg.data_dir)
     round_states = (store.read_round_state() if is_sheets
@@ -1199,26 +1189,6 @@ def page_admin(cfg, results, logs):
             st.dataframe(pd.DataFrame(
                 [{'Pair': ' & '.join(r['players']), 'Points': r['points']}
                  for r in existing]), width='stretch', hide_index=True)
-
-    with tab_putt:
-        teams = cfg.teams()
-        first = st.selectbox("Winning team (2 pts/player)", teams, key="po_1")
-        second = st.selectbox("Second place (1 pt/player)", teams, key="po_2")
-        if st.button("Save putt-off result"):
-            if first == second:
-                st.error("Pick two different teams.")
-            else:
-                if is_sheets:
-                    store.set_puttoff(first, second)
-                else:
-                    local.write_puttoff({'first': first, 'second': second})
-                refresh_now()
-                st.success(f"Saved: 1st {first}, 2nd {second}")
-                st.rerun()
-        current = store.read_puttoff() if is_sheets else local.read_puttoff()
-        if current.get('first'):
-            st.caption(f"Current: 1st {current['first']}, "
-                       f"2nd {current.get('second', '-')}")
 
     with tab_adjust:
         st.markdown("One-off point adjustments (positive or negative). "
