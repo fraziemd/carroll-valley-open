@@ -9,6 +9,7 @@ golf-outing-*.json
 # committed, then explicitly allow the non-secret config files the app needs.
 *.json
 !event_2026.json
+!event_2026_draft.json
 !players_2025.json
 !players_2026.json
 !courses.json
@@ -17,6 +18,11 @@ golf-outing-*.json
 # Sheets, so this stays out of git. (If you later decide you want history
 # snapshots committed for extra recoverability, add:  !data_2026/history/ )
 data_2026/
+
+# Synthetic scores from tools/make_fake_scores.py. They're deterministic from a
+# seed, so there's nothing worth preserving, and fake results must never be
+# mistaken for real ones in the repo.
+data_2026_draft/
 
 # Event log files (kept local; not meant for the repo)
 golf_outing_*.log

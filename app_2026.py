@@ -39,7 +39,10 @@ from jdcvo import pipeline, state
 from jdcvo.config import EventConfig
 from jdcvo.store import LocalStore
 
-CONFIG_PATH = 'event_2026.json'
+# Set JDCVO_CONFIG to run against a different event config (e.g. a 2026 draft
+# while the deployed app stays on the current one). Unset everywhere but a dev
+# shell, so the deployment is always the default below.
+CONFIG_PATH = os.environ.get('JDCVO_CONFIG', 'event_2026.json')
 REFRESH_SECONDS = 120
 
 TEAM_COLORS = {
@@ -667,7 +670,10 @@ def round_label(cfg, round_key):
 
 
 def fmt_pts(x):
-    return f"{x:g}" if x == round(x, 2) else f"{x:.2f}"
+    # Round first: summing points yields values like 32.099999999999994, which
+    # compare unequal to 32.1 and would otherwise render as "32.10" next to a
+    # column of single-decimal totals.
+    return f"{round(x, 2):g}"
 
 
 # Hand-built 7x7 sparkle/star made of solid blocks - not a font character.

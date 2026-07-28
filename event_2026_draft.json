@@ -1,0 +1,43 @@
+{
+  "_comment": "DRAFT 2026 event config. Run it with JDCVO_CONFIG=event_2026_draft.json; the deployed app keeps using event_2026.json (still 2025 data) until we swap this in. google_sheet_key is deliberately EMPTY so test runs write local JSON only and can never publish fake scores to the real 2026 sheet.",
+  "event_name": "The 'Jimmy D' Carroll Valley Open 2026",
+  "year": 2026,
+  "players_file": "players_2026.json",
+  "courses_file": "courses.json",
+  "google_sheet_key": "",
+  "data_dir": "data_2026_draft",
+  "_comment_rounds": "Schedule as circulated 2026-07-27. scrape_url values are PLACEHOLDERS, not real PlayThru events - they only need to be non-empty so the pipeline reads saved scores instead of skipping the round. Replace each with the real eid URL when the events exist.",
+  "rounds": {
+    "1": {
+      "name": "Round 1 - Best Ball (Friday morning)",
+      "scoring_style": "best_ball_individual",
+      "course": "Penn National Founders",
+      "scrape_url": "PLACEHOLDER-replace-with-2026-round-1-eid"
+    },
+    "2": {
+      "name": "Round 2 - Skins Match (Friday afternoon)",
+      "scoring_style": "match_play",
+      "course": "Carroll Valley",
+      "scrape_url": null
+    },
+    "3": {
+      "name": "Round 3 - Best Ball (Saturday morning)",
+      "scoring_style": "best_ball_individual",
+      "course": "Carroll Valley",
+      "scrape_url": "PLACEHOLDER-replace-with-2026-round-3-eid"
+    },
+    "4": {
+      "name": "Round 4 - Team Scramble (Saturday afternoon)",
+      "scoring_style": "team_scramble",
+      "course": "Carroll Valley",
+      "scrape_url": "PLACEHOLDER-replace-with-2026-round-4-eid"
+    },
+    "5": {
+      "name": "Round 5 - Two-Man Scramble (Sunday morning)",
+      "scoring_style": "two_man_scramble",
+      "course": "Gettysburg National",
+      "scrape_url": "PLACEHOLDER-replace-with-2026-round-5-eid",
+      "pair_separator": " and "
+    }
+  }
+}
