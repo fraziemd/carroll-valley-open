@@ -1,51 +1,47 @@
 {
   "event_name": "The 'Jimmy D' Carroll Valley Open 2026",
   "year": 2026,
-  "_comment_files": "players_file/courses_file point at the roster and course data for THIS year. Currently seeded with the 2025 files for validation; make players_2026.json when the roster is set and update here.",
-  "players_file": "players_2025.json",
+  "_comment_files": "players_file/courses_file point at the roster and course data for THIS year. Course pars and stroke indexes come from courses.json only -- the PlayThru pages publish no par or handicap data, so courses.json is the sole source and was verified hole-by-hole against the paper scorecards.",
+  "players_file": "players_2026.json",
   "courses_file": "courses.json",
-  "_comment_sheet": "ID of the Google Sheet the new system publishes to. LEAVE EMPTY until a NEW sheet is created for 2026 -- the 2025 sheet must not be overwritten. When empty, the pipeline writes local JSON only.",
+  "_comment_sheet": "ID of the 2026 Google Sheet this publishes to. This is NOT the 2025 sheet; that data must stay intact. If ever blanked, the pipeline writes local JSON only.",
   "google_sheet_key": "1xkuYfhvUHg4cxq62D2Fw004zSReNUkEyWR8n5xc42sY",
   "data_dir": "data_2026",
   "handicap_allocation": "full",
-  "_comment_handicap_allocation": "full = every stroke the handicap says (a 30 gets 30). capped = old notebook rule of max 1 stroke/hole. Use full.",
-  "_comment_rounds": "One entry per round. scoring_style: best_ball_individual | match_play | team_scramble | two_man_scramble. scrape_url: PlayThru leaderboard URL (null for manual-entry rounds). URLs below are the STILL-LIVE 2025 events, kept for end-to-end testing; replace with 2026 eids before the event.",
+  "_comment_handicap_allocation": "full = every stroke the handicap says (a 30 gets 30). capped = old notebook rule of max 1 stroke/hole. Use full. See SCORING.md.",
+  "_comment_rounds": "One entry per round. scoring_style: best_ball_individual | match_play | team_scramble | two_man_scramble. scrape_url: PlayThru leaderboard URL (null for manual-entry rounds). The eids below are the REAL 2026 events, each verified to serve the right course, day and entry list.",
   "rounds": {
     "1": {
-      "name": "Round 1 - Best Ball Individual",
+      "name": "Round 1 - Best Ball (Friday morning)",
       "scoring_style": "best_ball_individual",
-      "course": "Gettysburg National",
-      "scrape_url": "https://golf.golfplaythru.com/leaderboard.php?eid=36008&lhole=F",
-      "handicap_overrides": {
-        "Matt K": 16
-      }
+      "course": "Penn National Founders",
+      "scrape_url": "https://golf.golfplaythru.com/leaderboard.php?eid=46108&lhole=F"
     },
     "2": {
-      "name": "Round 2 - Match Play",
+      "name": "Round 2 - Skins Match (Friday afternoon)",
+      "_comment": "Points are agreed at the table and typed in by hand under Admin -> Match play. Nothing is scraped, so this round cannot auto-complete; close it manually.",
       "scoring_style": "match_play",
-      "course": null,
+      "course": "Carroll Valley",
       "scrape_url": null
     },
     "3": {
-      "name": "Round 3 - Best Ball Individual",
+      "name": "Round 3 - Best Ball (Saturday morning)",
       "scoring_style": "best_ball_individual",
       "course": "Carroll Valley",
-      "scrape_url": "https://golf.golfplaythru.com/leaderboard.php?eid=36010&lhole=F",
-      "handicap_overrides": {
-        "Matt K": 10
-      }
+      "scrape_url": "https://golf.golfplaythru.com/leaderboard.php?eid=46112&lhole=F"
     },
     "4": {
-      "name": "Round 4 - Team Scramble",
+      "name": "Round 4 - Team Scramble (Saturday afternoon)",
       "scoring_style": "team_scramble",
       "course": "Carroll Valley",
-      "scrape_url": "https://golf.golfplaythru.com/leaderboard.php?eid=36004&lhole=F"
+      "scrape_url": "https://golf.golfplaythru.com/leaderboard.php?eid=46114&lhole=F"
     },
     "5": {
-      "name": "Round 5 - Two-Man Scramble",
+      "name": "Round 5 - Two-Man Scramble (Sunday morning)",
+      "_comment": "Players subtract their own pair handicap and enter NET scores, so the engine applies no handicap here. pair_separator must match how pairs are named on PlayThru.",
       "scoring_style": "two_man_scramble",
-      "course": "The Links at Gettysburg",
-      "scrape_url": "https://golf.golfplaythru.com/leaderboard.php?eid=36005&lhole=F",
+      "course": "Gettysburg National",
+      "scrape_url": "https://golf.golfplaythru.com/leaderboard.php?eid=46115&lhole=F",
       "pair_separator": " and "
     }
   }
