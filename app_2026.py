@@ -1172,29 +1172,66 @@ def page_admin(cfg, results, logs):
     with tab_match:
         st.markdown("Enter each pair's match-play points (both players in the "
                     "pair receive the amount).")
-        players = sorted(p['name'] for p in cfg.players.values())
-        p1 = st.selectbox("Player 1", players, key="mp_p1")
-        p2 = st.selectbox("Player 2", players, key="mp_p2")
-        pts = st.number_input("Points (0-5)", min_value=0.0, max_value=5.0,
-                              step=0.25, key="mp_pts")
-        if st.button("Save match-play result"):
-            if p1 == p2:
-                st.error("Pick two different players.")
-            else:
+
+        existing = store.read_match_play() if is_sheets else local.read_match_play()
+        # Later entries supersede earlier ones for the same pair, matching how
+        # the scoring engine keys pair points, so a correction doesn't read as
+        # a second award.
+        entered = {}
+        for r in existing:
+            entered[frozenset(r['players'])] = float(r['points'])
+
+        # The pairs are fixed by the roster, so offer them directly rather than
+        # letting two independent player pickers produce a pair that doesn't exist.
+        partners = cfg.partners(2)
+        seen, pairs = set(), []
+        for name in partners:
+            partner = partners[name]
+            key = frozenset((name, partner))
+            if key in seen or partner not in partners:
+                continue
+            seen.add(key)
+            pairs.append(tuple(sorted((name, partner))))
+        pairs.sort()
+
+        if not pairs:
+            st.warning("No Round 2 pairs are defined in the roster file, so "
+                       "there is nothing to enter here.")
+        else:
+            def pair_label(pair):
+                label = ' & '.join(pair)
+                got = entered.get(frozenset(pair))
+                return label if got is None else f"{label}  ✓ {fmt_pts(got)}"
+
+            pair = st.selectbox("Pair", pairs, format_func=pair_label,
+                                key="mp_pair")
+            pts = st.number_input("Points (0-5)", min_value=0.0, max_value=5.0,
+                                  step=0.25, key="mp_pts")
+            if st.button("Save match-play result"):
+                p1, p2 = pair
                 if is_sheets:
                     store.append_match_play(p1, p2, pts)
                 else:
-                    rows = local.read_match_play()
+                    rows = [r for r in local.read_match_play()
+                            if frozenset(r['players']) != frozenset(pair)]
                     rows.append({'players': [p1, p2], 'points': pts})
                     local.write_match_play(rows)
                 refresh_now()
-                st.success(f"Saved: {p1} & {p2} → {pts:g} each")
+                st.success(f"Saved: {p1} & {p2} → {fmt_pts(pts)} each")
                 st.rerun()
-        existing = store.read_match_play() if is_sheets else local.read_match_play()
-        if existing:
+
+            missing = [p for p in pairs if frozenset(p) not in entered]
+            if missing:
+                st.caption(f"Still missing {len(missing)} of {len(pairs)}: "
+                           + ', '.join(' & '.join(p) for p in missing))
+            else:
+                st.caption(f"All {len(pairs)} pairs entered.")
+
+        if entered:
             st.dataframe(pd.DataFrame(
-                [{'Pair': ' & '.join(r['players']), 'Points': r['points']}
-                 for r in existing]), width='stretch', hide_index=True)
+                [{'Pair': ' & '.join(sorted(k)), 'Points': fmt_pts(v)}
+                 for k, v in sorted(entered.items(), key=lambda kv: sorted(kv[0]))]),
+                width='stretch', hide_index=True)
 
     with tab_adjust:
         st.markdown("One-off point adjustments (positive or negative). "
