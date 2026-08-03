@@ -236,9 +236,23 @@ def run_pipeline(config_path='event_2026.json', scrape=True, log=print,
     # Frozen Sunday pair handicaps, if an admin has calculated them. Read
     # rather than recomputed so a late R1/R3 correction can't move a number
     # that has already been announced on the tee.
-    r5h = source.read_round_5_handicaps()
-    if r5h is None and source is not local:
-        r5h = local.read_round_5_handicaps()
+    #
+    # Never fatal. These are an addition to the leaderboard, not an input to
+    # it, so nothing here may stop the scores rendering. getattr guards the
+    # one case that actually bit: Streamlit caches the store instance with
+    # cache_resource, so a live app can hold an object built from a previous
+    # deploy's class that predates these methods.
+    def read_pair_handicaps(store_obj):
+        reader = getattr(store_obj, 'read_round_5_handicaps', None)
+        return reader() if reader is not None else None
+
+    r5h = None
+    try:
+        r5h = read_pair_handicaps(source)
+        if r5h is None and source is not local:
+            r5h = read_pair_handicaps(local)
+    except Exception as e:
+        log(f"Could not read Sunday pair handicaps ({e}) - continuing without them")
     results['round_5_handicaps'] = r5h
     if r5h:
         log(f"Sunday pair handicaps: {len(r5h.get('pairs', {}))} pairs, "

@@ -1301,8 +1301,18 @@ def render_sunday_handicap_admin(cfg, results, store, local, is_sheets):
                 "Round 1 and Round 3. Calculate, check them, then save to "
                 "lock them in.")
 
-    saved = (store.read_round_5_handicaps() if is_sheets
-             else local.read_round_5_handicaps())
+    # Same guard as the pipeline: a cache_resource store instance can outlive
+    # the deploy that defined these methods, and a bad read must not take the
+    # admin page down with it.
+    try:
+        if is_sheets and hasattr(store, 'read_round_5_handicaps'):
+            saved = store.read_round_5_handicaps()
+        else:
+            saved = local.read_round_5_handicaps()
+    except Exception as e:
+        saved = None
+        st.warning(f"Couldn't read the saved handicaps ({e}). Calculating still "
+                   f"works, but check the sheet before you rely on a save.")
 
     if saved and saved.get('pairs'):
         st.success(f"Saved and locked — calculated "
@@ -1410,8 +1420,16 @@ def render_sunday_handicap_admin(cfg, results, store, local, is_sheets):
             'pairs': pairs,
         }
         local.write_round_5_handicaps(payload)
+        # The sheet is the copy that survives a restart, so say so plainly if
+        # only the ephemeral local copy was written.
         if is_sheets:
-            store.write_round_5_handicaps(payload)
+            try:
+                store.write_round_5_handicaps(payload)
+            except Exception as e:
+                st.error(f"Saved locally but NOT to the Google Sheet ({e}). The "
+                         f"local copy is lost if the app restarts — reboot the "
+                         f"app and save again.")
+                return
         st.session_state.pop('sunday_preview', None)
         refresh_now()
         st.success(f"Locked in {len(pairs)} pair handicaps.")
