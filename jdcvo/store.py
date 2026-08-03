@@ -23,6 +23,15 @@ Manual-input schemas (JSON files and worksheet columns):
 - match_play.json:  [{"players": ["Andrew", "Tom K"], "points": 3.75}]
 - adjustments.json: [{"player": "Pete", "points": 4.5, "note": ""}]
 - round_state.json: {"1": {"override_status": null, "locked": false}, ...}
+- round_5_handicaps.json:
+      {"calculated_at": "2026-08-09 07:30:00",
+       "pairs": {"Joe M & Trock": {"player_a": "Joe M", "player_b": "Trock",
+                                   "player_a_handicap": 3,
+                                   "player_b_handicap": 22,
+                                   "pair_handicap": 5}}}
+  Saved deliberately by an admin, not recomputed each cycle: the pair
+  handicaps are announced on the first tee Sunday, so a late Round 1 or 3
+  correction must not silently move them. Recalculating is an explicit act.
 """
 
 import json
@@ -92,6 +101,12 @@ class LocalStore:
     def write_round_state(self, state):
         self._write_json('round_state.json', state)
 
+    def read_round_5_handicaps(self):
+        return self._read_json('round_5_handicaps.json', None)
+
+    def write_round_5_handicaps(self, data):
+        self._write_json('round_5_handicaps.json', data)
+
     # --- computed output ---
 
     def write_results(self, results):
@@ -116,6 +131,12 @@ MANUAL_WORKSHEETS = {
     'Match Play': (['Player 1', 'Player 2', 'Points'], 'rows'),
     'Adjustments': (['Player', 'Points', 'Note'], 'rows'),
     'Round Status': (['Round', 'Inferred Status', 'Override Status', 'Locked'], 'rows'),
+    # Computed by the admin, then frozen. Lives here rather than with the
+    # published leaderboards because it must be read back unchanged every
+    # cycle, and because the local data dir is ephemeral on Streamlit Cloud.
+    'Sunday Handicaps': (['Pair', 'Player A', 'A Sunday Handicap',
+                          'Player B', 'B Sunday Handicap', 'Pair Handicap',
+                          'Calculated At'], 'rows'),
 }
 
 
@@ -256,6 +277,43 @@ class SheetsStore:
                     'locked': locked,
                 }
         return state
+
+    def read_round_5_handicaps(self):
+        """Read the frozen Sunday pair handicaps, or None if not yet saved."""
+        rows = [r for r in self._read_rows('Sunday Handicaps') if r.get('Pair')]
+        if not rows:
+            return None
+
+        def num(v):
+            try:
+                return int(v)
+            except (TypeError, ValueError):
+                return None
+
+        pairs = {}
+        for r in rows:
+            pairs[r['Pair']] = {
+                'player_a': r.get('Player A', ''),
+                'player_b': r.get('Player B', ''),
+                'player_a_handicap': num(r.get('A Sunday Handicap')),
+                'player_b_handicap': num(r.get('B Sunday Handicap')),
+                'pair_handicap': num(r.get('Pair Handicap')),
+            }
+        return {'calculated_at': rows[0].get('Calculated At', ''),
+                'pairs': pairs}
+
+    def write_round_5_handicaps(self, data):
+        headers = MANUAL_WORKSHEETS['Sunday Handicaps'][0]
+        ws = self._worksheet('Sunday Handicaps', headers)
+        rows = [headers]
+        stamp = (data or {}).get('calculated_at', '')
+        for label, p in sorted((data or {}).get('pairs', {}).items()):
+            rows.append([label, p['player_a'], p['player_a_handicap'],
+                         p['player_b'], p['player_b_handicap'],
+                         p['pair_handicap'], stamp])
+        self._retry(ws.clear)
+        self._retry(ws.update, rows)
+        self._invalidate_cache()
 
     def append_extra(self, round_number, player, category, points, note=''):
         ws = self._worksheet('Extras', MANUAL_WORKSHEETS['Extras'][0])

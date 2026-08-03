@@ -417,9 +417,13 @@ scores and asserts exact agreement with the saved fixtures.
   outside and typed into the roster by hand. Worth porting. The two parts most
   easily got wrong by hand are the offset's population (this year's field only,
   §2.1) and the rolling two-year window (drop the third year, don't accumulate).
-- **The Sunday pair handicap has no UI.** `calculate_round_5_handicaps` is
-  implemented and tested but nothing calls it — there is no admin tab to run it
-  and nowhere it is displayed.
+- ~~**The Sunday pair handicap has no UI.**~~ Done. Admin → *Sunday handicaps*
+  calculates and previews, then freezes on save. Saved figures go to
+  `round_5_handicaps.json` and the *Sunday Handicaps* tab of the sheet, and the
+  pair strokes appear on the public Round 5 page. Frozen deliberately: the pairs
+  are told their strokes on the first tee, so a later Round 1 or 3 correction
+  must not move them. Recalculating is an explicit act and warns before
+  overwriting a locked figure.
 - **2024 scores live only in a spreadsheet**
   (`Carroll Valley Aug 23 2024 (2).xlsx`, sheet `Golf`). Section one is
   Gettysburg National, section two is Carroll Valley; par and stroke index in

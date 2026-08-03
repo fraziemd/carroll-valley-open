@@ -233,6 +233,17 @@ def run_pipeline(config_path='event_2026.json', scrape=True, log=print,
     # --- 2-4. Compute ---
     results = compute_results(cfg, raw, manual, round_states, log=log)
 
+    # Frozen Sunday pair handicaps, if an admin has calculated them. Read
+    # rather than recomputed so a late R1/R3 correction can't move a number
+    # that has already been announced on the tee.
+    r5h = source.read_round_5_handicaps()
+    if r5h is None and source is not local:
+        r5h = local.read_round_5_handicaps()
+    results['round_5_handicaps'] = r5h
+    if r5h:
+        log(f"Sunday pair handicaps: {len(r5h.get('pairs', {}))} pairs, "
+            f"calculated {r5h.get('calculated_at') or 'unknown'}")
+
     # --- 5. Persist ---
     local.write_results(results)
     log(f"Results written to {cfg.data_dir}/results.json (+ history snapshot)")

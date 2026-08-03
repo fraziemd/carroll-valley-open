@@ -173,6 +173,11 @@ key in it, rotate the key in Google Cloud Console.
   lock the round in Admin → Round status.
 - **Round 2 (skins/match play)**: enter pair points in Admin → Match play. It
   can't auto-complete, so close it manually when the points are in.
+- **Before Sunday**: once Rounds 1 and 3 are final, run Admin → Sunday
+  handicaps, check the numbers, then save to lock them. The pair strokes then
+  show on the public Round 5 page for everyone. Saved figures don't move if a
+  Round 1 or 3 score is corrected later — recalculate deliberately if you want
+  them to.
 - **Bad score on a card**: Admin → Fix a score (survives re-scrapes).
 - **Anything weird**: every computed point is visible in Rounds → "Full
   scoring log", and every publish leaves a snapshot in `data_2026/history/`.

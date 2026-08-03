@@ -31,11 +31,12 @@ st.set_page_config(
 
 import base64
 import os
+from datetime import datetime
 
 import pandas as pd
 import streamlit.components.v1 as components
 
-from jdcvo import pipeline, state
+from jdcvo import pipeline, scoring, state
 from jdcvo.config import EventConfig
 from jdcvo.store import LocalStore
 
@@ -871,6 +872,27 @@ def page_team(cfg, results):
         f"{k}: {fmt_pts(v)}" for k, v in totals.items()))
 
 
+def render_pair_handicaps(results):
+    """Public view of the frozen Sunday pair handicaps: the strokes each pair
+    gets, and nothing about how they were derived."""
+    saved = results.get('round_5_handicaps')
+    pairs = (saved or {}).get('pairs') or {}
+    if not pairs:
+        st.info("Pair handicaps haven't been set yet. They're calculated from "
+                "Round 1 and Round 3 once both are in the books.")
+        return
+
+    st.subheader("Pair handicaps")
+    st.dataframe(pd.DataFrame(
+        [{'Pair': label, 'Strokes': p['pair_handicap']}
+         for label, p in sorted(pairs.items(),
+                                key=lambda kv: kv[1]['pair_handicap'])]),
+        width='stretch', hide_index=True)
+    if saved.get('calculated_at'):
+        st.caption(f"Set {saved['calculated_at']}. Enter your net score — "
+                   f"subtract your pair's strokes from your gross total.")
+
+
 def page_round(cfg, results):
     options = [str(n) for n in cfg.round_numbers()]
     round_key = st.selectbox(
@@ -883,6 +905,11 @@ def page_round(cfg, results):
     st.caption(f"{rcfg['scoring_style']}"
                + (f" · {course}" if course else "")
                + f" · {ROUND_STATUS_LABELS[status]}")
+
+    # Shown before the round starts as well as during it: the pairs need their
+    # stroke allocation on the first tee, which is the whole point of it.
+    if rcfg['scoring_style'] == 'two_man_scramble':
+        render_pair_handicaps(results)
 
     if status == state.NOT_STARTED:
         st.info("This round hasn't started yet.")
@@ -960,8 +987,10 @@ def page_admin(cfg, results, logs):
     with st.expander("Last pipeline log"):
         st.text("\n".join(logs))
 
-    tab_status, tab_fix, tab_extras, tab_match, tab_adjust = st.tabs(
-        ["Round status", "Fix a score", "Extras", "Match play", "Adjustments"])
+    (tab_status, tab_fix, tab_extras, tab_match, tab_adjust,
+     tab_sunday) = st.tabs(
+        ["Round status", "Fix a score", "Extras", "Match play", "Adjustments",
+         "Sunday handicaps"])
 
     local = LocalStore(cfg.data_dir)
     round_states = (store.read_round_state() if is_sheets
@@ -1255,6 +1284,138 @@ def page_admin(cfg, results, logs):
         if existing:
             st.dataframe(pd.DataFrame(existing), width='stretch',
                          hide_index=True)
+
+    with tab_sunday:
+        render_sunday_handicap_admin(cfg, results, store, local, is_sheets)
+
+
+def render_sunday_handicap_admin(cfg, results, store, local, is_sheets):
+    """Calculate, review and freeze the Round 5 two-man pair handicaps.
+
+    Deliberately a two-step flow. Calculating shows a preview only; nothing is
+    stored until Save. Once saved, the numbers are what the app and the sheet
+    report, even if a Round 1 or 3 score is corrected afterwards, because the
+    pairs are told their strokes on the first tee and can't be moved after.
+    """
+    st.markdown("Pair handicaps for the Sunday two-man scramble, derived from "
+                "Round 1 and Round 3. Calculate, check them, then save to "
+                "lock them in.")
+
+    saved = (store.read_round_5_handicaps() if is_sheets
+             else local.read_round_5_handicaps())
+
+    if saved and saved.get('pairs'):
+        st.success(f"Saved and locked — calculated "
+                   f"{saved.get('calculated_at') or 'at an unknown time'}. "
+                   f"These are the numbers the app and the sheet are showing.")
+        st.dataframe(pd.DataFrame([
+            {'Pair': label,
+             'Player A': p['player_a'], 'A': p['player_a_handicap'],
+             'Player B': p['player_b'], 'B': p['player_b_handicap'],
+             'Pair handicap': p['pair_handicap']}
+            for label, p in sorted(saved['pairs'].items())
+        ]), width='stretch', hide_index=True)
+
+    # Round 1 and 3 gross scores are the only inputs. Without both, there is
+    # nothing to derive from.
+    raw = results.get('raw_scores', {})
+    r1 = [e for e in raw.get('1', raw.get(1, []))
+          if e.get('scoring_style') != 'team_scramble']
+    r3 = [e for e in raw.get('3', raw.get(3, []))
+          if e.get('scoring_style') != 'team_scramble']
+    holes1, holes3 = cfg.course_holes(1), cfg.course_holes(3)
+
+    def complete(entries):
+        return [e for e in entries
+                if len(e.get('hole_scores', {})) == 18
+                and all(v for v in e['hole_scores'].values())]
+
+    c1, c3 = complete(r1), complete(r3)
+    st.caption(f"Inputs: Round 1 has {len(c1)} of {len(cfg.players)} complete "
+               f"cards, Round 3 has {len(c3)}.")
+
+    if not holes1 or not holes3:
+        st.warning("Round 1 and Round 3 need courses set in the event config "
+                   "before handicaps can be derived.")
+        return
+    if len(c1) < len(cfg.players) or len(c3) < len(cfg.players):
+        st.warning("Both Round 1 and Round 3 need a complete card for every "
+                   "player. Finish or correct the missing cards first — a "
+                   "partial card would understate that player's handicap.")
+
+    label = "Recalculate" if saved else "Calculate pair handicaps"
+    if st.button(label, type="primary"):
+        try:
+            st.session_state['sunday_preview'] = scoring.calculate_round_5_handicaps(
+                c1, c3, holes1, holes3, cfg.handicaps(), cfg.partners(5),
+                allocation=cfg.handicap_allocation)
+        except Exception as e:
+            st.session_state.pop('sunday_preview', None)
+            st.error(f"Could not calculate: {e}")
+
+    preview = st.session_state.get('sunday_preview')
+    if not preview:
+        return
+
+    ind, pairs = preview['individual_handicaps'], preview['pair_handicaps']
+    if not pairs:
+        if not ind:
+            st.error("No player could be scored — Round 1 and Round 3 have no "
+                     "usable cards yet, so there is nothing to derive from.")
+        else:
+            st.error("Individual figures came out, but no pairs could be "
+                     "built. Check that round_5_partner is set for every "
+                     "player in the roster file.")
+        return
+
+    st.markdown("**Preview — not saved yet**")
+    st.dataframe(pd.DataFrame([
+        {'Pair': label_,
+         'Player A': p['player_a'], 'A': p['player_a_handicap'],
+         'Player B': p['player_b'], 'B': p['player_b_handicap'],
+         'Pair handicap': p['pair_handicap']}
+        for label_, p in sorted(pairs.items())
+    ]), width='stretch', hide_index=True)
+
+    with st.expander("How each player's Sunday figure was derived"):
+        st.dataframe(pd.DataFrame([
+            {'Player': n,
+             'R1 adj. total': d['round_1_adjusted_total'],
+             'R1 vs par': f"{d['round_1_relative']:+d}",
+             'R3 adj. total': d['round_3_adjusted_total'],
+             'R3 vs par': f"{d['round_3_relative']:+d}",
+             'Average': f"{d['avg_relative']:+.1f}",
+             'Sunday handicap': d['handicap']}
+            for n, d in sorted(ind.items())
+        ]), width='stretch', hide_index=True)
+        notes = [d for d in preview.get('details', []) if d.startswith('Missing')]
+        if notes:
+            st.warning("\n\n".join(notes))
+
+    if saved and saved.get('pairs'):
+        changes = [f"{k}: {saved['pairs'][k]['pair_handicap']} → "
+                   f"{v['pair_handicap']}"
+                   for k, v in sorted(pairs.items())
+                   if k in saved['pairs']
+                   and saved['pairs'][k]['pair_handicap'] != v['pair_handicap']]
+        if changes:
+            st.warning("Saving would change already-locked handicaps:\n\n"
+                       + "\n\n".join(f"- {c}" for c in changes))
+        else:
+            st.info("Identical to what is already saved.")
+
+    if st.button("Save and lock these handicaps"):
+        payload = {
+            'calculated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'pairs': pairs,
+        }
+        local.write_round_5_handicaps(payload)
+        if is_sheets:
+            store.write_round_5_handicaps(payload)
+        st.session_state.pop('sunday_preview', None)
+        refresh_now()
+        st.success(f"Locked in {len(pairs)} pair handicaps.")
+        st.rerun()
 
 
 # Arcade-mode "attract screen" shown once per session before the real app.
