@@ -30,6 +30,7 @@ st.set_page_config(
 )
 
 import base64
+import json
 import os
 from datetime import datetime
 
@@ -612,13 +613,47 @@ def build_arcade_audio_html():
 # Data access
 # ---------------------------------------------------------------------------
 
+def data_fingerprint():
+    """Identity of the data AND code the caches depend on.
+
+    st.cache_resource can outlive a redeploy. That bit us twice today: the
+    app kept a SheetsStore built from a class that predated
+    read_round_5_handicaps, and it kept a 2025 EventConfig after the roster
+    switched to 2026. Keying every cache on this fingerprint means a change
+    to the event config, the roster, the courses, or the store class itself
+    forces a fresh object.
+    """
+    paths = [CONFIG_PATH, 'jdcvo/store.py']
+    try:
+        with open(CONFIG_PATH) as f:
+            raw = json.load(f)
+        paths += [raw.get('players_file'), raw.get('courses_file')]
+    except (OSError, ValueError):
+        pass
+
+    parts = []
+    for path in paths:
+        if not path:
+            continue
+        try:
+            s = os.stat(path)
+            parts.append(f"{path}:{s.st_mtime_ns}:{s.st_size}")
+        except OSError:
+            parts.append(f"{path}:missing")
+    return '|'.join(parts)
+
+
 @st.cache_resource
-def get_config():
+def _load_config(fingerprint):
     return EventConfig(CONFIG_PATH)
 
 
+def get_config():
+    return _load_config(data_fingerprint())
+
+
 @st.cache_resource
-def get_sheets():
+def _load_sheets(fingerprint):
     """SheetsStore when a sheet key and credentials are available, else None."""
     cfg = get_config()
     if not cfg.google_sheet_key:
@@ -629,6 +664,17 @@ def get_sheets():
     return SheetsStore(cfg.google_sheet_key, dict(st.secrets['gcp_service_account']))
 
 
+def get_sheets():
+    """SheetsStore for this fingerprint, rebuilt if a stale cached instance
+    is missing methods the current code expects."""
+    fp = data_fingerprint()
+    store = _load_sheets(fp)
+    if store is not None and not hasattr(store, 'read_round_5_handicaps'):
+        _load_sheets.clear()
+        store = _load_sheets(fp)
+    return store
+
+
 def get_writable_store():
     """Where admin edits go: the sheet if configured, else local JSON."""
     sheets = get_sheets()
@@ -636,7 +682,7 @@ def get_writable_store():
 
 
 @st.cache_data(ttl=REFRESH_SECONDS, show_spinner="Updating scores...")
-def get_results():
+def _run_cycle(fingerprint):
     """Run one scrape+score cycle (publish only when Sheets is configured)."""
     logs = []
     results = pipeline.run_pipeline(CONFIG_PATH, scrape=True,
@@ -644,8 +690,16 @@ def get_results():
     return results, logs
 
 
+def get_results():
+    return _run_cycle(data_fingerprint())
+
+
 def refresh_now():
-    get_results.clear()
+    _run_cycle.clear()
+    # Also drop the memoized store/config so the next cycle cannot reuse an
+    # object built against a previous deploy's class or roster.
+    _load_sheets.clear()
+    _load_config.clear()
 
 
 # ---------------------------------------------------------------------------
@@ -734,7 +788,11 @@ def page_leaderboard(cfg, results):
         standings = sorted(individual.items(), key=lambda x: -x[1]['total_points'])
         for rank, (pid, e) in enumerate(standings, 1):
             color = TEAM_COLORS.get(e['team'], '#3498db')
-            champion = champion_marker(cfg.players[pid])
+            # A player present in the results but not the roster means the two
+            # disagree. Show the row without a champion marker rather than
+            # taking the whole public leaderboard down over an icon.
+            champion = (champion_marker(cfg.players[pid])
+                        if pid in cfg.players else '')
             card(
                 f"<span class='lb-name' style='font-size:1.2em;font-weight:bold;color:#ecf0f1;'>"
                 f"#{rank} {e['name']} {champion}</span>",
@@ -748,7 +806,7 @@ def page_leaderboard(cfg, results):
         for rank, (t, e) in enumerate(
                 sorted(team.items(), key=lambda x: -x[1]['total_points']), 1):
             color = TEAM_COLORS.get(t, '#e74c3c')
-            names = ', '.join(id_names[p] for p in e['players'])
+            names = ', '.join(id_names.get(p, p) for p in e['players'])
             card(
                 f"<span class='lb-name' style='font-size:1.2em;font-weight:bold;color:#ecf0f1;'>"
                 f"#{rank} {t}</span><br>"
