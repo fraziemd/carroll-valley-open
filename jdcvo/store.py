@@ -338,6 +338,19 @@ class SheetsStore:
         self._retry(ws.append_row, [round_number, entity, hole, score, note])
         self._invalidate_cache()
 
+    def write_corrections(self, corrections):
+        """Replace the whole Corrections worksheet (used for edits/deletions)."""
+        headers = MANUAL_WORKSHEETS['Corrections'][0]
+        ws = self._worksheet('Corrections', headers)
+        rows = [headers]
+        for c in corrections:
+            rows.append([c.get('round', ''), c.get('entity', ''),
+                         c.get('hole', ''), c.get('score', ''),
+                         c.get('note', '')])
+        self._retry(ws.clear)
+        self._retry(ws.update, rows)
+        self._invalidate_cache()
+
     def append_match_play(self, player1, player2, points):
         ws = self._worksheet('Match Play', MANUAL_WORKSHEETS['Match Play'][0])
         self._retry(ws.append_row, [player1, player2, points])
@@ -364,6 +377,18 @@ class SheetsStore:
     def append_adjustment(self, player, points, note=''):
         ws = self._worksheet('Adjustments', MANUAL_WORKSHEETS['Adjustments'][0])
         self._retry(ws.append_row, [player, points, note])
+        self._invalidate_cache()
+
+    def write_adjustments(self, adjustments):
+        """Replace the whole Adjustments worksheet (used for edits/deletions)."""
+        headers = MANUAL_WORKSHEETS['Adjustments'][0]
+        ws = self._worksheet('Adjustments', headers)
+        rows = [headers]
+        for a in adjustments:
+            rows.append([a.get('player', ''), a.get('points', ''),
+                         a.get('note', '')])
+        self._retry(ws.clear)
+        self._retry(ws.update, rows)
         self._invalidate_cache()
 
     def write_round_state(self, round_states, inferred):

@@ -934,12 +934,74 @@ def page_admin(cfg, results, logs):
             refresh_now()
             st.success(f"Saved: {entity}, hole {hole} → {int(score)}")
             st.rerun()
-        existing = (store.read_corrections() if is_sheets
-                    else local.read_corrections())
-        if existing:
-            st.markdown("**Existing corrections:**")
-            st.dataframe(pd.DataFrame(existing), width='stretch',
-                         hide_index=True)
+
+        existing = store.read_corrections()
+
+        st.divider()
+        st.markdown("**Edit or remove corrections**")
+        if not existing:
+            st.caption("No corrections entered yet.")
+        else:
+            st.caption("Change any value directly in a cell; delete a row with "
+                       "the checkbox on its left, then the trash/❌ that appears. "
+                       "Click **Save corrections changes** to apply. Deleting a "
+                       "correction reverts that hole to whatever PlayThru says "
+                       "on the next refresh.")
+            # Entities seen in any round's scores, plus any already stored, so
+            # an existing row for a player who has since dropped out still has
+            # a valid option and isn't silently rewritten.
+            entity_opts = sorted({e['name']
+                                  for rows in results['raw_scores'].values()
+                                  for e in rows}
+                                 | {str(c['entity']) for c in existing
+                                    if c.get('entity')})
+            round_editor_opts = list(dict.fromkeys(
+                round_options + [str(c['round']) for c in existing]))
+            edit_rows = []
+            for c in existing:
+                try:
+                    sc = int(float(c['score']))
+                except (TypeError, ValueError):
+                    sc = 0
+                edit_rows.append({
+                    'Round': str(c['round']), 'Entity': str(c['entity']),
+                    'Hole': str(c['hole']), 'Score': sc,
+                    'Note': str(c.get('note', '') or '')})
+            edited = st.data_editor(
+                pd.DataFrame(edit_rows), key="fix_editor", width='stretch',
+                hide_index=True, num_rows="dynamic",
+                column_config={
+                    'Round': st.column_config.SelectboxColumn(
+                        options=round_editor_opts, required=True),
+                    'Entity': st.column_config.SelectboxColumn(
+                        options=entity_opts, required=True),
+                    'Hole': st.column_config.SelectboxColumn(
+                        options=[str(h) for h in range(1, 19)], required=True),
+                    'Score': st.column_config.NumberColumn(
+                        min_value=1, max_value=20, step=1, required=True),
+                    'Note': st.column_config.TextColumn(),
+                })
+            if st.button("Save corrections changes"):
+                new_rows = []
+                for _, r in edited.iterrows():
+                    if pd.isna(r['Entity']) or not str(r['Entity']).strip():
+                        continue
+                    if pd.isna(r['Round']) or not str(r['Round']).strip():
+                        continue
+                    if pd.isna(r['Hole']) or not str(r['Hole']).strip():
+                        continue
+                    try:
+                        sc = int(float(r['Score']))
+                    except (TypeError, ValueError):
+                        continue
+                    new_rows.append({
+                        'round': str(r['Round']), 'entity': str(r['Entity']),
+                        'hole': str(r['Hole']), 'score': sc,
+                        'note': '' if pd.isna(r['Note']) else str(r['Note'])})
+                store.write_corrections(new_rows)
+                refresh_now()
+                st.success(f"Saved {len(new_rows)} correction(s).")
+                st.rerun()
 
     with tab_extras:
         players = sorted(p['name'] for p in cfg.players.values())
@@ -1094,11 +1156,54 @@ def page_admin(cfg, results, logs):
             refresh_now()
             st.success(f"Saved: {player} {pts:+g}")
             st.rerun()
-        existing = (store.read_adjustments() if is_sheets
-                    else local.read_adjustments())
-        if existing:
-            st.dataframe(pd.DataFrame(existing), width='stretch',
-                         hide_index=True)
+
+        existing = store.read_adjustments()
+
+        st.divider()
+        st.markdown("**Edit or remove adjustments**")
+        if not existing:
+            st.caption("No adjustments entered yet.")
+        else:
+            st.caption("Change any value directly in a cell; delete a row with "
+                       "the checkbox on its left, then the trash/❌ that appears. "
+                       "Click **Save adjustments changes** to apply.")
+            player_editor_opts = sorted(
+                set(players) | {str(a['player']) for a in existing
+                                if a.get('player')})
+            edit_rows = []
+            for a in existing:
+                try:
+                    p = float(a['points'])
+                except (TypeError, ValueError):
+                    p = 0.0
+                edit_rows.append({'Player': str(a['player']), 'Points': p,
+                                  'Reason': str(a.get('note', '') or '')})
+            edited = st.data_editor(
+                pd.DataFrame(edit_rows), key="adj_editor", width='stretch',
+                hide_index=True, num_rows="dynamic",
+                column_config={
+                    'Player': st.column_config.SelectboxColumn(
+                        options=player_editor_opts, required=True),
+                    'Points': st.column_config.NumberColumn(step=0.5,
+                                                            required=True),
+                    'Reason': st.column_config.TextColumn(),
+                })
+            if st.button("Save adjustments changes"):
+                new_rows = []
+                for _, r in edited.iterrows():
+                    if pd.isna(r['Player']) or not str(r['Player']).strip():
+                        continue
+                    try:
+                        p = float(r['Points'])
+                    except (TypeError, ValueError):
+                        continue
+                    new_rows.append({
+                        'player': str(r['Player']), 'points': p,
+                        'note': '' if pd.isna(r['Reason']) else str(r['Reason'])})
+                store.write_adjustments(new_rows)
+                refresh_now()
+                st.success(f"Saved {len(new_rows)} adjustment(s).")
+                st.rerun()
 
     with tab_sunday:
         render_sunday_handicap_admin(cfg, results, store, local, is_sheets)
