@@ -573,42 +573,74 @@ def fmt_pts(x):
     return f"{round(x, 2):g}"
 
 
-# Hand-built 7x7 sparkle/star made of solid blocks - not a font character.
-# ("Press Start 2P" doesn't include a star glyph, so text stars silently fall
-# back to a smooth system font despite the styling; a real pixel-block shape
-# sidesteps that entirely and looks genuinely 8-bit at any size.)
-_PIXEL_STAR_CELLS = [
-    (3, 0), (3, 1),
-    (2, 2), (3, 2), (4, 2),
-    (0, 3), (2, 3), (3, 3), (4, 3), (6, 3),
-    (2, 4), (3, 4), (4, 4),
-    (3, 5), (3, 6),
+# Champion badges drawn as solid pixel blocks rather than font characters.
+# ("Press Start 2P" has no crown or trophy glyph, so a text character silently
+# falls back to a smooth system font despite the styling; real pixel blocks
+# sidestep that and look genuinely 8-bit at any size.)
+#
+# Both shapes are mostly solid mass rather than thin outlines. At leaderboard
+# size a cell is only ~2px, so a design carried by single-cell strokes (the
+# sparkle these replaced) greys out into a smudge instead of reading as a
+# shape; the few one-cell details here read fine because they sit against a
+# solid block.
+_PIXEL_CROWN = [
+    "#..#..#",
+    "#.###.#",
+    "#######",
+    "#######",
+    ".#####.",
 ]
-def _pixel_star_svg(color='#e8b400', size=0.9):
-    # Press Start 2P is an unusual font: its capitals fill the whole em box
-    # (cap height 1em, zero descent). Aligning the glyph to the baseline the
-    # way a normal font would want drops it below the letters, so centre it on
-    # the cap box instead — bottom edge (1em - size)/2 above the baseline puts
-    # the glyph's middle exactly on the letters' middle.
-    shift = (1.0 - size) / 2
+_PIXEL_TROPHY = [
+    ".#####.",
+    "#.###.#",
+    "#.###.#",
+    ".#####.",
+    "...#...",
+    "..###..",
+    ".#####.",
+]
+
+
+def _pixel_glyph_svg(grid, color='#e8b400', height=0.9):
+    """Render an ASCII pixel grid as a crisp inline SVG sized in em.
+
+    Press Start 2P is an unusual font: its capitals fill the whole em box
+    (cap height 1em, zero descent). Aligning to the baseline the way a normal
+    font would want drops the glyph below the letters, so centre it on the cap
+    box instead — a bottom edge (1em - height)/2 above the baseline puts the
+    glyph's middle exactly on the letters' middle.
+    """
+    rows, cols = len(grid), len(grid[0])
     rects = "".join(
         f'<rect x="{x}" y="{y}" width="1" height="1" fill="{color}"/>'
-        for x, y in _PIXEL_STAR_CELLS)
+        for y, row in enumerate(grid)
+        for x, cell in enumerate(row) if cell == '#')
+    # Width follows the aspect ratio so a wide glyph like the crown isn't
+    # squashed into a square.
+    width = height * cols / rows
+    shift = (1.0 - height) / 2
     return (
-        f'<svg viewBox="0 0 7 7" width="{size:g}em" height="{size:g}em" '
+        f'<svg viewBox="0 0 {cols} {rows}" width="{width:.4f}em" '
+        f'height="{height:g}em" '
         f'style="vertical-align:{shift:.4f}em;shape-rendering:crispEdges;" '
         f'xmlns="http://www.w3.org/2000/svg">{rects}</svg>')
 
 
 def champion_marker(player):
-    """Champion badge for the leaderboard: emoji normally, a hand-built pixel
-    sparkle in arcade mode (real emoji are smooth color pictures that ignore
-    any font, so they never look 8-bit no matter how they're styled)."""
+    """Champion badge for the leaderboard: emoji normally, hand-built pixel
+    art in arcade mode (real emoji are smooth colour pictures that ignore any
+    font, so they never look 8-bit no matter how they're styled).
+
+    Crown for the reigning champion, trophy for past champions, matching the
+    emoji pair — arcade mode used to show one shape for both and lose the
+    distinction entirely.
+    """
     if not (player.get('current_champion') or player.get('past_champion')):
         return ""
+    current = player.get('current_champion')
     if st.session_state.get('arcade_mode'):
-        return _pixel_star_svg()
-    return "👑" if player.get('current_champion') else "🏆"
+        return _pixel_glyph_svg(_PIXEL_CROWN if current else _PIXEL_TROPHY)
+    return "👑" if current else "🏆"
 
 
 # ---------------------------------------------------------------------------
