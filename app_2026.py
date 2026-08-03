@@ -199,12 +199,12 @@ hr { border-color: #ffa629 !important; box-shadow: 0 0 8px #ffa629; }
 </style>
 """
 
-# Purchased/evaluation sound-effect samples (see sfx_preview/ and
-# music_preview/), embedded as base64 data URIs directly in the iframe's HTML
-# so no separate static file server is needed. NOTE: these are still
-# watermarked preview clips from AudioJungle-style packs - fine for
-# testing/prototyping the wiring, but should be swapped for the purchased,
-# unwatermarked files before real event use.
+# Purchased/evaluation sound-effect samples (see sfx_preview/), embedded as
+# base64 data URIs directly in the iframe's HTML so no separate static file
+# server is needed. NOTE: these are still watermarked preview clips from
+# AudioJungle-style packs - fine for testing/prototyping the wiring, but
+# should be swapped for the purchased, unwatermarked files before real event
+# use.
 def _audio_data_uri(rel_path):
     try:
         with open(rel_path, 'rb') as f:
@@ -228,45 +228,29 @@ _ARCADE_SFX = {
     'leader_change': _audio_data_uri(os.path.join('sfx_preview', 'victory_2.mp3')),
 }
 
-_ARCADE_MUSIC_LOOP = _audio_data_uri(os.path.join('music_preview', 'loop_2.mp3'))
-
 # Fixed historical high score shown in the HI-SCORE display (2025 champion's
 # final total), per explicit user confirmation - not derived from any data
 # file, and not meant to update automatically as future seasons complete.
 ARCADE_HI_SCORE = 38
 
-# Background music + SFX for arcade mode, rendered via components.html (a
-# real <iframe>) rather than st.markdown, because browsers never execute
-# <script> tags injected through innerHTML/dangerouslySetInnerHTML - only a
-# real document (iframe) will run them.
+# Sound effects for arcade mode, rendered via components.html (a real
+# <iframe>) rather than st.markdown, because browsers never execute <script>
+# tags injected through innerHTML/dangerouslySetInnerHTML - only a real
+# document (iframe) will run them.
 #
-# The background loop is a real sample track (music_preview/loop_2.mp3,
-# still a watermarked preview - swap for the purchased file before real
-# event use). On desktop it's decoded once into an AudioBuffer and looped
-# sample-accurately via Web Audio API rather than an <audio loop> tag, to
-# avoid the small gap/click most browsers introduce at the loop point with
-# plain HTML5 audio looping. On MOBILE it deliberately uses a plain looping
-# <audio> element instead - mobile browsers aggressively suspend Web Audio
-# contexts moments after each touch gesture (music died after ~2s per tap),
-# but treat <audio> as real media playback and let it keep playing (see
-# IS_MOBILE in the JS below).
+# There is deliberately NO background music. It was removed on request; only
+# the per-action effects remain. Each is a one-off HTML5 Audio clip fired
+# straight from a click - the click is itself the user gesture browsers
+# require before audio may play, so nothing needs an AudioContext, an
+# autoplay workaround, or the mobile <audio> fallback the old looping track
+# needed. The panel is just a volume control for these effects.
 #
-# Music defaults ON, but does NOT autoplay on load - browsers block audio
-# until the user interacts with the page anyway. Instead it kicks off on the
-# first click in the app, which in a fresh arcade session is the click that
-# dismisses the intro/attract screen (see startMusicOnGesture below). The
-# panel's toggle can still turn it off (e.g. while developing). The per-action
-# SFX are NOT gated by the toggle at all - they're one-off clips triggered
-# directly by a click, so they always just play.
+# As long as this exact HTML string keeps rendering at the same spot on every
+# Streamlit rerun, Streamlit reuses the same underlying iframe instead of
+# recreating it, so its JS state and parent-page listeners survive reruns
+# instead of being torn down and rebuilt every refresh.
 #
-# As long as this exact HTML string keeps rendering at the same spot on
-# every Streamlit rerun, Streamlit reuses the same underlying iframe instead
-# of recreating it, so the loop and its JS state (audio context, whether
-# music is on, etc.) survive reruns instead of restarting every time the
-# page refreshes.
-#
-# This same persistent iframe is also used to trigger the sample SFX above,
-# for two different kinds of moments:
+# The iframe triggers effects for two kinds of moments:
 #   1. Clicks on real Streamlit widgets, which live in the PARENT page, not
 #      this iframe. Since components.html's iframe uses srcdoc without a
 #      `sandbox` attribute, it's same-origin with the parent, so a listener
@@ -277,8 +261,8 @@ ARCADE_HI_SCORE = 38
 #      polling a small hidden marker div that main() re-renders each rerun
 #      with the current leader/live-round state. Polling (rather than baking
 #      the event directly into this HTML) is what keeps this iframe's content
-#      byte-identical across reruns, so it doesn't get recreated and the
-#      music loop doesn't restart.
+#      byte-identical across reruns, so it isn't recreated and its listeners
+#      aren't lost.
 ARCADE_AUDIO_HTML_TEMPLATE = """
 <div id="arcade-audio-panel" style="
     font-family: 'Courier New', monospace;
@@ -293,48 +277,13 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
     font-size: 12px;
     box-sizing: border-box;
 ">
-  <button id="arcade-music-toggle" title="Turn background music on/off (on by default)" style="
-      font-size: 16px;
-      line-height: 1;
-      color: #ffa629;
-      background: #000;
-      border: 2px solid #ffa629;
-      border-radius: 0;
-      padding: 3px 7px;
-      cursor: pointer;
-      flex-shrink: 0;
-  ">&#128266;</button>
   <label style="display:flex; align-items:center; gap:6px; white-space:nowrap; flex:1; min-width:0;">
-    VOL
+    SFX VOL
     <input id="arcade-vol" type="range" min="0" max="100" value="35" style="flex:1; min-width:0;">
   </label>
 </div>
 <script>
 (function() {
-  let audioCtx = null;
-  let masterGain = null;
-  let musicGain = null;
-  let musicBuffer = null;
-  let musicSource = null;
-  let musicOn = true; // background loop defaults ON, started on first click (see startMusicOnGesture)
-
-  const MUSIC_LOOP_SRC = "__MUSIC_LOOP__";
-
-  // Mobile browsers (iOS Safari/Chrome especially) treat Web Audio as
-  // ephemeral sound-effect audio and aggressively suspend the AudioContext
-  // moments after the triggering gesture ends - the loop dies after a second
-  // or two, revives briefly on each tap (our click hook calls resume()), and
-  // dies again. HTML5 <audio> elements are treated as MEDIA PLAYBACK instead
-  // and keep playing once started, so on touch devices the music uses a
-  // plain looping <audio> element. Web Audio stays on desktop because its
-  // loop is sample-accurate/gapless (HTML5 looping has a tiny seam, an
-  // acceptable trade on mobile where the alternative is silence).
-  // iPadOS reports itself as "MacIntel" but has multitouch, hence the
-  // maxTouchPoints check.
-  const IS_MOBILE = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-    || (navigator.maxTouchPoints > 1);
-  let musicEl = null; // the HTML5 fallback element (mobile only)
-
   // Sample-based SFX (real audio clips, embedded as data URIs by Python).
   // Each interaction TYPE has its own dedicated clip - never shared with a
   // different type of interaction - so the sound itself is a consistent cue
@@ -351,9 +300,8 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
   };
   const sfxTemplates = {};
   function playSample(name) {
-    // Not gated by the music toggle - these are one-off clips fired
-    // directly from a click, which is itself the user gesture browsers
-    // require, so they can just always play.
+    // One-off clips fired directly from a click, which is itself the user
+    // gesture browsers require, so they can just always play.
     const src = SFX_SOURCES[name];
     if (!src) return;
     if (!sfxTemplates[name]) {
@@ -366,136 +314,12 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
     el.play().catch(function() { /* ignore - e.g. no gesture yet */ });
   }
 
+  // Read fresh on every play, so moving the slider affects the next effect
+  // without needing a change listener.
   function getVol() {
     const el = document.getElementById('arcade-vol');
     return el ? (parseInt(el.value, 10) / 100) : 0.35;
   }
-
-  function updateMusicVolume() {
-    if (musicGain) musicGain.gain.value = getVol();
-    if (musicEl) musicEl.volume = getVol();
-  }
-
-  function base64ToArrayBuffer(dataUri) {
-    const comma = dataUri.indexOf(',');
-    const raw = atob(dataUri.slice(comma + 1));
-    const bytes = new Uint8Array(raw.length);
-    for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-    return bytes.buffer;
-  }
-
-  // Starts the loop, decoding the track into an AudioBuffer the first time
-  // (cached in musicBuffer after that, so later starts are instant).
-  function startMusicLoop() {
-    if (!MUSIC_LOOP_SRC || musicSource) return;
-    const finish = function(buffer) {
-      musicBuffer = buffer;
-      if (!musicOn || musicSource) return; // turned off, or already started meanwhile
-      musicSource = audioCtx.createBufferSource();
-      musicSource.buffer = musicBuffer;
-      musicSource.loop = true;
-      musicGain = audioCtx.createGain();
-      musicGain.gain.value = getVol();
-      musicSource.connect(musicGain).connect(masterGain);
-      musicSource.start(0);
-    };
-    if (musicBuffer) {
-      finish(musicBuffer);
-      return;
-    }
-    audioCtx.decodeAudioData(base64ToArrayBuffer(MUSIC_LOOP_SRC))
-      .then(finish)
-      .catch(function() { /* ignore - e.g. malformed/missing data */ });
-  }
-
-  // Stops and tears down the current source node. musicBuffer (the decoded
-  // track) stays cached, so turning the loop back on afterwards is instant
-  // - just a fresh AudioBufferSourceNode, no re-decoding.
-  function stopMusicLoop() {
-    if (musicSource) {
-      try { musicSource.stop(); } catch (e) { /* already stopped */ }
-      try { musicSource.disconnect(); } catch (e) { /* already disconnected */ }
-      musicSource = null;
-    }
-    if (musicGain) {
-      try { musicGain.disconnect(); } catch (e) { /* already disconnected */ }
-      musicGain = null;
-    }
-  }
-
-  // Mobile path: plain looping <audio> element (see IS_MOBILE comment above).
-  // Idempotent - safe to call on every tap; play() only fires when paused,
-  // which also self-heals after OS-level interruptions (calls, Siri, etc.).
-  function startMusicHtml5() {
-    if (!MUSIC_LOOP_SRC) return;
-    if (!musicEl) {
-      musicEl = new Audio(MUSIC_LOOP_SRC);
-      musicEl.loop = true;
-      musicEl.setAttribute('playsinline', '');
-    }
-    musicEl.volume = getVol(); // no-op on iOS (volume is hardware-controlled there)
-    if (musicEl.paused) {
-      musicEl.play().catch(function() { /* ignore - e.g. no gesture yet */ });
-    }
-  }
-
-  function stopMusicHtml5() {
-    if (musicEl) musicEl.pause();
-  }
-
-  function setMusicIcon() {
-    document.getElementById('arcade-music-toggle').innerHTML =
-      musicOn ? '&#128266;' : '&#128263;';
-  }
-
-  document.getElementById('arcade-music-toggle').addEventListener('click', function() {
-    musicOn = !musicOn;
-    setMusicIcon();
-    if (musicOn) {
-      if (IS_MOBILE) {
-        startMusicHtml5();
-        return;
-      }
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        masterGain = audioCtx.createGain();
-        masterGain.gain.value = 1.0;
-        masterGain.connect(audioCtx.destination);
-      }
-      audioCtx.resume();
-      startMusicLoop();
-    } else {
-      stopMusicLoop();
-      stopMusicHtml5();
-    }
-  });
-
-  // Kick the background loop off on a user gesture. Browsers won't let audio
-  // start without one, so this is wired to the first click in the app (which,
-  // in a fresh arcade session, is the click that dismisses the intro/attract
-  // screen). Idempotent and cheap to call on every click: it no-ops when music
-  // is toggled off, only ever builds the audio context once, and startMusicLoop
-  // itself no-ops once a source is already running.
-  function startMusicOnGesture() {
-    if (!musicOn) return;
-    if (IS_MOBILE) {
-      // Also doubles as self-healing: any later tap restarts the element if
-      // the OS paused it (audio interruption, tab backgrounded, etc.).
-      startMusicHtml5();
-      return;
-    }
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      masterGain = audioCtx.createGain();
-      masterGain.gain.value = 1.0;
-      masterGain.connect(audioCtx.destination);
-    }
-    audioCtx.resume();
-    startMusicLoop();
-  }
-
-  const volSlider = document.getElementById('arcade-vol');
-  if (volSlider) volSlider.addEventListener('input', updateMusicVolume);
 
   // --- Hooks into the parent Streamlit page (see module docstring above) ---
   function setupParentHooks() {
@@ -503,16 +327,12 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
     try {
       parentDoc = window.parent.document;
     } catch (e) {
-      return; // not same-origin for some reason - fail silently, music still works
+      return; // not same-origin for some reason - fail silently
     }
 
     // Click sounds on real widgets in the parent page.
     parentDoc.addEventListener('click', function(e) {
       const target = e.target;
-      // Start the background loop on the first real click (the intro-screen
-      // dismissal in a fresh session). No-op after it's running / when music
-      // is off, so it's safe to call on every click.
-      startMusicOnGesture();
       // Any radio button, anywhere (sidebar page nav, in-page radio groups).
       if (target.closest('input[type="radio"], [role="radiogroup"] label')) {
         playSample('radio');
@@ -587,7 +407,6 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
     }, 1500);
   }
 
-  setMusicIcon(); // reflect the default (music on) in the toggle icon
   setupParentHooks();
 })();
 </script>
@@ -605,7 +424,6 @@ def build_arcade_audio_html():
                               ('round_live', '__SFX_ROUND_LIVE__'),
                               ('leader_change', '__SFX_LEADER_CHANGE__')]:
         html = html.replace(placeholder, _ARCADE_SFX[key])
-    html = html.replace('__MUSIC_LOOP__', _ARCADE_MUSIC_LOOP)
     return html
 
 
@@ -1632,7 +1450,7 @@ def main():
         # Hidden marker the audio panel's persistent iframe polls (see its
         # comment above) to detect a changed leader, a newly-LIVE round, or
         # an admin-password submission, without changing the iframe's own
-        # content (which would restart the background music loop).
+        # content (which would tear down and rebuild it).
         live_rounds = ','.join(
             n for n, s in sorted(results['round_statuses'].items())
             if s == state.LIVE)
