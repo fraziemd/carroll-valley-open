@@ -60,6 +60,30 @@ ROUND_STATUS_LABELS = {
     state.COMPLETE: 'Complete',
 }
 
+# Extras categories: stored key -> (display label, usual points).
+# The key is what goes in the sheet and stays stable; only the label is shown.
+# Storing the label instead would mean old rows fragmenting into separate
+# columns in the summary table the day anyone reworded one.
+EXTRA_CATEGORIES = {
+    'chip_in': ('Chip-in', 2.0),
+    'longest_drive': ('Longest drive', 1.0),
+    'closest_to_pin': ('Closest to the pin', 1.0),
+    'hole_in_one': ('Hole-in-one', 8.0),
+    'adjustment': ('Adjustment', 0.0),
+}
+
+
+def extra_category_label(key):
+    """Readable name for a stored extras category.
+
+    Unknown keys (hand-entered in the sheet, or from an older season) are
+    prettified rather than dropped, so nothing ever renders as raw snake_case.
+    """
+    key = str(key or '')
+    if key in EXTRA_CATEGORIES:
+        return EXTRA_CATEGORIES[key][0]
+    return key.replace('_', ' ').strip().capitalize() or '(none)'
+
 # Optional retro 80s/90s arcade skin, toggled from the sidebar. Pixel font on
 # headings/buttons; a larger, legible retro font ("VT323") on body and tables
 # so the leaderboard stays readable. Fully reversible (off = normal theme).
@@ -671,7 +695,13 @@ def _player_round_detail(cfg, results, round_key, name, pid):
     if round_key == 'extras':
         rows = [r for r in results['extras_detail'] if r['player'] == name]
         if rows:
-            st.dataframe(pd.DataFrame(rows), width='stretch', hide_index=True)
+            st.dataframe(pd.DataFrame([
+                {'Round': (round_label(cfg, str(r['round']))
+                           if str(r['round']) else '—'),
+                 'What': extra_category_label(r['category']),
+                 'Points': fmt_pts(float(r['points'])),
+                 'Note': r.get('note', '') or ''}
+                for r in rows]), width='stretch', hide_index=True)
         return
 
     b = breakdowns.get(str(round_key), {})
@@ -1008,21 +1038,23 @@ def page_admin(cfg, results, logs):
         round_opts = [str(n) for n in cfg.round_numbers()]
 
         st.markdown("**Add an extra**")
-        st.caption("Chip-ins (2), longest drive (1), closest to pin (1), "
-                   "hole-in-one bonus (8), or any custom amount.")
+        st.caption("Pick a category for the usual amount, or type any points "
+                   "you like.")
         player = st.selectbox("Player", players, key="ex_player")
         rn = st.selectbox("Round", round_opts, key="ex_round")
-        category = st.selectbox("Category", [
-            'chip_in (2)', 'longest_drive (1)', 'closest_to_pin (1)',
-            'hole_in_one (8)'], key="ex_cat")
-        default_pts = {'chip_in (2)': 2.0, 'longest_drive (1)': 1.0,
-                       'closest_to_pin (1)': 1.0, 'hole_in_one (8)': 8.0,
-                       }[category]
-        points = st.number_input("Points", value=default_pts, step=0.5,
-                                 key="ex_pts")
+        cat_keys = [k for k in EXTRA_CATEGORIES if k != 'adjustment']
+
+        def cat_option(k):
+            label, pts = EXTRA_CATEGORIES[k]
+            unit = 'pt' if pts == 1 else 'pts'
+            return f"{label} ({fmt_pts(pts)} {unit})"
+
+        cat = st.selectbox("Category", cat_keys, format_func=cat_option,
+                           key="ex_cat")
+        points = st.number_input("Points", value=EXTRA_CATEGORIES[cat][1],
+                                 step=0.5, key="ex_pts")
         note = st.text_input("Note", key="ex_note")
         if st.button("Add extras"):
-            cat = category.split(' ')[0]
             if is_sheets:
                 store.append_extra(rn, player, cat, points, note)
             else:
@@ -1048,6 +1080,14 @@ def page_admin(cfg, results, logs):
                 set(players) | {str(e['player']) for e in existing if e.get('player')})
             round_editor_opts = list(dict.fromkeys(
                 round_opts + [str(e['round']) for e in existing]))
+            # The editor shows labels, not the stored keys, so map back on save.
+            # Any category already stored but not in EXTRA_CATEGORIES still gets
+            # an option, so an unrecognised row isn't silently rewritten.
+            cat_label_to_key = {extra_category_label(k): k
+                                for k in EXTRA_CATEGORIES}
+            for e in existing:
+                cat_label_to_key.setdefault(
+                    extra_category_label(e['category']), str(e['category']))
             edit_rows = []
             for e in existing:
                 try:
@@ -1056,7 +1096,8 @@ def page_admin(cfg, results, logs):
                     pts = 0.0
                 edit_rows.append({
                     'Round': str(e['round']), 'Player': str(e['player']),
-                    'Category': str(e['category']), 'Points': pts,
+                    'Category': extra_category_label(e['category']),
+                    'Points': pts,
                     'Note': str(e.get('note', '') or '')})
             edited = st.data_editor(
                 pd.DataFrame(edit_rows), key="ex_editor", width='stretch',
@@ -1066,7 +1107,8 @@ def page_admin(cfg, results, logs):
                         options=round_editor_opts, required=True),
                     'Player': st.column_config.SelectboxColumn(
                         options=player_editor_opts, required=True),
-                    'Category': st.column_config.TextColumn(required=True),
+                    'Category': st.column_config.SelectboxColumn(
+                        options=sorted(cat_label_to_key), required=True),
                     'Points': st.column_config.NumberColumn(step=0.5,
                                                             required=True),
                     'Note': st.column_config.TextColumn(),
@@ -1082,10 +1124,10 @@ def page_admin(cfg, results, logs):
                         pts = float(r['Points'])
                     except (TypeError, ValueError):
                         pts = 0.0
+                    label = '' if pd.isna(r['Category']) else str(r['Category'])
                     new_rows.append({
                         'round': str(r['Round']), 'player': str(r['Player']),
-                        'category': ('' if pd.isna(r['Category'])
-                                     else str(r['Category'])),
+                        'category': cat_label_to_key.get(label, label),
                         'points': pts,
                         'note': '' if pd.isna(r['Note']) else str(r['Note'])})
                 store.write_extras(new_rows)
@@ -1097,8 +1139,7 @@ def page_admin(cfg, results, logs):
         st.markdown("**Visual summary — counts per round × category**")
         summary_player = st.selectbox("Show player", players,
                                       key="ex_summary_player")
-        std_cats = ['chip_in', 'longest_drive', 'closest_to_pin',
-                    'hole_in_one']
+        std_cats = [k for k in EXTRA_CATEGORIES if k != 'adjustment']
         other_cats = [c for c in dict.fromkeys(str(e['category'])
                                                for e in existing)
                       if c and c not in std_cats]
@@ -1112,7 +1153,8 @@ def page_admin(cfg, results, logs):
                 c = str(e['category'])
                 counts[rk][c] = counts[rk].get(c, 0) + 1
         summary_df = pd.DataFrame([
-            {'Round': round_label(cfg, rk), **{c: counts[rk][c] for c in cats}}
+            {'Round': round_label(cfg, rk),
+             **{extra_category_label(c): counts[rk][c] for c in cats}}
             for rk in round_opts])
         st.dataframe(summary_df, width='stretch', hide_index=True)
         st.caption("Each cell is how many of that extra the player recorded in "
