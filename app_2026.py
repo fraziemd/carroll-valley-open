@@ -584,13 +584,19 @@ _PIXEL_STAR_CELLS = [
     (2, 4), (3, 4), (4, 4),
     (3, 5), (3, 6),
 ]
-def _pixel_star_svg(color='#e8b400'):
+def _pixel_star_svg(color='#e8b400', size=0.9):
+    # Press Start 2P is an unusual font: its capitals fill the whole em box
+    # (cap height 1em, zero descent). Aligning the glyph to the baseline the
+    # way a normal font would want drops it below the letters, so centre it on
+    # the cap box instead — bottom edge (1em - size)/2 above the baseline puts
+    # the glyph's middle exactly on the letters' middle.
+    shift = (1.0 - size) / 2
     rects = "".join(
         f'<rect x="{x}" y="{y}" width="1" height="1" fill="{color}"/>'
         for x, y in _PIXEL_STAR_CELLS)
     return (
-        '<svg viewBox="0 0 7 7" width="0.9em" height="0.9em" '
-        'style="vertical-align:-0.1em;shape-rendering:crispEdges;" '
+        f'<svg viewBox="0 0 7 7" width="{size:g}em" height="{size:g}em" '
+        f'style="vertical-align:{shift:.4f}em;shape-rendering:crispEdges;" '
         f'xmlns="http://www.w3.org/2000/svg">{rects}</svg>')
 
 
