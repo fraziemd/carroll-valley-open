@@ -167,6 +167,9 @@ key in it, rotate the key in Google Cloud Console.
 
 ## During the event — cheat sheet
 
+- **Where am I up to?**: Admin → Progress lists every step in order, ticks off
+  the ones the stored data shows are done, and calls out the next one. It is
+  derived from the data, not from a checklist you tick, so it can't drift.
 - **Nothing to start/stop per round**: statuses flip automatically as scores
   appear. Glance at Admin → Round status if you want to confirm.
 - **After each round**: enter extras (chip-ins etc.) in Admin → Extras;
@@ -179,5 +182,10 @@ key in it, rotate the key in Google Cloud Console.
   Round 1 or 3 score is corrected later — recalculate deliberately if you want
   them to.
 - **Bad score on a card**: Admin → Fix a score (survives re-scrapes).
+- **Rounds scored out of order**: allowed on purpose. Gating a later round on
+  an earlier one would stop scoring mid-event over a single unfinished card,
+  which is worse than the problem it prevents. An untouched round is
+  `not_started` and awards nothing, and anything out of sequence shows up as a
+  note in Admin → Progress.
 - **Anything weird**: every computed point is visible in Rounds → "Full
   scoring log", and every publish leaves a snapshot in `data_2026/history/`.

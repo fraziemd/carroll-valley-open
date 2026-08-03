@@ -893,14 +893,17 @@ def page_admin(cfg, results, logs):
     with st.expander("Last pipeline log"):
         st.text("\n".join(logs))
 
-    (tab_status, tab_fix, tab_extras, tab_match, tab_adjust,
+    (tab_timeline, tab_status, tab_fix, tab_extras, tab_match, tab_adjust,
      tab_sunday) = st.tabs(
-        ["Round status", "Fix a score", "Extras", "Match play", "Adjustments",
-         "Sunday handicaps"])
+        ["Progress", "Round status", "Fix a score", "Extras", "Match play",
+         "Adjustments", "Sunday handicaps"])
 
     local = LocalStore(cfg.data_dir)
     round_states = (store.read_round_state() if is_sheets
                     else local.read_round_state())
+
+    with tab_timeline:
+        render_timeline(cfg, results, round_states, store, local, is_sheets)
 
     with tab_status:
         st.markdown("Status is auto-inferred from the scores. Use overrides only "
@@ -1281,6 +1284,230 @@ def round_2_matches(cfg):
         matches.append(tuple(sorted((a, b))))
     matches.sort()
     return matches
+
+
+def _round_finished(cfg, results, n, match_entries):
+    """Whether a round's scoring input is all in.
+
+    Round 2 has no scorecards, so it can never infer its way to ``complete``;
+    it is finished when all five matches have points. Treating it like the
+    scraped rounds would leave it permanently flagged as outstanding.
+    """
+    if cfg.round_config(n)['scoring_style'] == 'match_play':
+        matches = round_2_matches(cfg)
+        return bool(matches) and all(
+            frozenset(a) in match_entries or frozenset(b) in match_entries
+            for a, b in matches)
+    return results['round_statuses'].get(str(n)) == state.COMPLETE
+
+
+def _timeline_steps(cfg, results, round_states, extras, match_entries):
+    """The event's human steps, in order, each marked done or still open.
+
+    Every step is derived from the stored data rather than a separate "done"
+    flag, so the checklist cannot drift away from what was actually entered.
+    ``waiting`` means the step isn't reachable yet (the round hasn't been
+    played); ``open`` means it's actionable now.
+    """
+    statuses = results['round_statuses']
+    raw = results['raw_scores']
+    extras_by_round = {}
+    for e in extras:
+        extras_by_round.setdefault(str(e['round']), []).append(e)
+
+    def unfinished(k):
+        out = []
+        for entry in raw.get(k, []):
+            done = len([h for h, s in entry.get('hole_scores', {}).items()
+                        if s != 0])
+            if done < 18:
+                out.append((entry.get('name', '?'), done))
+        return out
+
+    steps = []
+    prev_finished = True
+    for n in cfg.round_numbers():
+        k = str(n)
+        label = round_label(cfg, k)
+        status = statuses.get(k, state.NOT_STARTED)
+        rs = round_states.get(k, {})
+        manual_close = bool(rs.get('override_status'))
+        started = status != state.NOT_STARTED
+
+        if cfg.round_config(n)['scoring_style'] == 'match_play':
+            # No scorecards to scrape: the round exists only as entered points,
+            # so the match sheet is the step and it can never self-complete.
+            matches = round_2_matches(cfg)
+            got = [m for m in matches
+                   if frozenset(m[0]) in match_entries
+                   or frozenset(m[1]) in match_entries]
+            if matches and len(got) == len(matches):
+                st_ = 'done'
+            elif got or prev_finished:
+                # Nothing to enter until the round before it has been played,
+                # or this would read as the outstanding task all week.
+                st_ = 'open'
+            else:
+                st_ = 'waiting'
+            steps.append({
+                'label': f"{label} — enter match play points",
+                'state': st_,
+                'detail': (f"{len(got)} of {len(matches)} matches entered"
+                           if matches else "no matches built from the roster"),
+                'where': 'Match play tab'})
+        else:
+            if status == state.COMPLETE:
+                left = unfinished(k)
+                if manual_close:
+                    detail = "closed manually by override"
+                elif left:
+                    detail = f"{len(left)} card(s) still short of 18 holes"
+                else:
+                    detail = f"all {len(raw.get(k, []))} cards in"
+                st_ = 'done'
+            elif status == state.LIVE:
+                left = unfinished(k)
+                names = ', '.join(f"{nm} ({d}/18)" for nm, d in left[:4])
+                if len(left) > 4:
+                    names += f", +{len(left) - 4} more"
+                st_ = 'open'
+                detail = (f"in progress — waiting on {names}" if left
+                          else "in progress")
+            else:
+                st_ = 'waiting'
+                detail = "no scores yet"
+            steps.append({'label': f"{label} — scores in", 'state': st_,
+                          'detail': detail, 'where': 'PlayThru / Round status tab'})
+
+        got_extras = extras_by_round.get(k, [])
+        steps.append({
+            'label': f"{label} — enter extras",
+            'state': ('done' if got_extras else
+                      'open' if started else 'waiting'),
+            'detail': (f"{len(got_extras)} entered"
+                       if got_extras else "none entered yet"),
+            'where': 'Extras tab'})
+
+        if cfg.round_config(n)['scoring_style'] == 'two_man_scramble':
+            r5h = results.get('round_5_handicaps') or {}
+            ready = all(statuses.get(str(d)) == state.COMPLETE for d in (1, 3))
+            if r5h.get('pairs'):
+                detail = (f"{len(r5h['pairs'])} pairs frozen "
+                          f"{r5h.get('calculated_at') or ''}").strip()
+            elif ready:
+                detail = "Rounds 1 and 3 are in — ready to calculate"
+            else:
+                detail = "needs Rounds 1 and 3 complete"
+            steps.insert(len(steps) - 2, {
+                'label': "Calculate Sunday pair handicaps",
+                'state': ('done' if r5h.get('pairs') else
+                          'open' if ready else 'waiting'),
+                'detail': detail,
+                'where': 'Sunday handicaps tab'})
+
+        prev_finished = _round_finished(cfg, results, n, match_entries)
+
+    return steps
+
+
+def _timeline_warnings(cfg, results, round_states, match_entries):
+    """Things that look wrong but aren't blocked.
+
+    Scoring a later round before an earlier one is finished is allowed on
+    purpose — gating it would silently stop scoring mid-event over one
+    unfinished card — so out-of-order work is reported here instead.
+    """
+    statuses = results['round_statuses']
+    warnings = []
+
+    numbers = list(cfg.round_numbers())
+    for i, n in enumerate(numbers):
+        if statuses.get(str(n), state.NOT_STARTED) == state.NOT_STARTED:
+            continue
+        behind = [d for d in numbers[:i]
+                  if not _round_finished(cfg, results, d, match_entries)]
+        if behind:
+            names = ', '.join(round_label(cfg, str(d)) for d in behind)
+            warnings.append(f"{round_label(cfg, str(n))} has scores, but "
+                            f"{names} "
+                            f"{'are' if len(behind) > 1 else 'is'} not "
+                            f"finished yet.")
+
+    for k, rs in round_states.items():
+        if rs.get('locked') and statuses.get(k) != state.COMPLETE:
+            warnings.append(f"{round_label(cfg, k)} is locked but not "
+                            f"complete — scraping has stopped there.")
+
+    for a, b in round_2_matches(cfg):
+        pa, pb = match_entries.get(frozenset(a)), match_entries.get(frozenset(b))
+        if pa is None and pb is None:
+            continue
+        total = (pa or 0) + (pb or 0)
+        if abs(total - MATCH_PLAY_POINTS) > 0.001:
+            warnings.append(
+                f"{' & '.join(a)} vs {' & '.join(b)} totals "
+                f"{fmt_pts(total)}, not {fmt_pts(MATCH_PLAY_POINTS)} — "
+                f"probably edited in the sheet by hand.")
+
+    matches = {frozenset(p) for m in round_2_matches(cfg) for p in m}
+    for pair in match_entries:
+        if pair not in matches:
+            warnings.append(f"Match play points recorded for "
+                            f"{' & '.join(sorted(pair))}, who are not a "
+                            f"Round 2 pair.")
+    return warnings
+
+
+def render_timeline(cfg, results, round_states, store, local, is_sheets):
+    """Read-only progress view: what's done, and what to do next."""
+    extras = store.read_extras()
+    match_rows = (store.read_match_play() if is_sheets
+                  else local.read_match_play())
+    match_entries = {frozenset(r['players']): float(r['points'])
+                     for r in match_rows}
+
+    steps = _timeline_steps(cfg, results, round_states, extras, match_entries)
+    warnings = _timeline_warnings(cfg, results, round_states, match_entries)
+
+    done = sum(1 for s in steps if s['state'] == 'done')
+    # Fall through to the first waiting step when nothing is actionable, so an
+    # event that hasn't started doesn't report itself finished.
+    nxt = next((s for s in steps if s['state'] == 'open'),
+               next((s for s in steps if s['state'] != 'done'), None))
+
+    st.progress(done / len(steps) if steps else 0.0,
+                text=f"{done} of {len(steps)} steps done")
+    if nxt is None:
+        st.success("Every step is done.")
+    elif nxt['state'] == 'open':
+        st.info(f"**Next:** {nxt['label']}  \n{nxt['detail']} · "
+                f"{nxt['where']}")
+    else:
+        st.info(f"**Nothing to do yet.** Next up: {nxt['label']}  \n"
+                f"{nxt['detail']}")
+
+    st.markdown("")
+    icons = {'done': '✅', 'open': '🔸', 'waiting': '·'}
+    for s in steps:
+        mark = '👉' if s is nxt else icons[s['state']]
+        dim = s['state'] == 'waiting'
+        label = (f"<span style='opacity:.45'>{s['label']}</span>" if dim
+                 else f"<strong>{s['label']}</strong>")
+        st.markdown(
+            f"{mark} {label}<br>"
+            f"<span style='opacity:.6;font-size:.85em;padding-left:1.6em'>"
+            f"{s['detail']}</span>", unsafe_allow_html=True)
+
+    if warnings:
+        st.divider()
+        st.markdown("**Worth a look**")
+        for w in warnings:
+            st.warning(w)
+
+    st.divider()
+    st.caption("Nothing here blocks anything — a later round can be scored "
+               "before an earlier one is finished, on purpose. Entering "
+               "scores out of order only shows up as a note above.")
 
 
 def render_match_play_admin(cfg, store, local, is_sheets):
