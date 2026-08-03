@@ -1,0 +1,122 @@
+player,year,course,par,hcp_used,gross,adj_total,shaved,rel_to_par,note
+Andrew,2024,Gettysburg National,71,6,97,91,6,+20,
+Andrew,2024,Carroll Valley,71,6,88,88,0,+17,
+Andrew,2025,Gettysburg National,71,10,97,95,2,+24,
+Andrew,2025,Carroll Valley,71,10,97,96,1,+25,
+Andrew,SUMMARY,,,,,,,+21.50 avg,"hcp=14, n=4"
+,,,,,,,,,
+Ben,2024,Gettysburg National,71,2,81,81,0,+10,
+Ben,2024,Carroll Valley,71,2,87,86,1,+15,
+Ben,2025,Gettysburg National,71,3,80,80,0,+9,
+Ben,2025,Carroll Valley,71,3,87,87,0,+16,
+Ben,SUMMARY,,,,,,,+12.50 avg,"hcp=5, n=4"
+,,,,,,,,,
+Dan,2024,Gettysburg National,71,12,99,96,3,+25,
+Dan,2024,Carroll Valley,71,12,108,106,2,+35,
+Dan,2025,Gettysburg National,71,13,104,104,0,+33,
+Dan,2025,Carroll Valley,71,13,100,100,0,+29,
+Dan,SUMMARY,,,,,,,+30.50 avg,"hcp=23, n=4"
+,,,,,,,,,
+Eli,2024,Gettysburg National,71,2,83,82,1,+11,
+Eli,2024,Carroll Valley,71,2,87,85,2,+14,
+Eli,SUMMARY,,,,,,,+12.50 avg,"hcp=5, n=2"
+,,,,,,,,,
+Frazier,2024,Gettysburg National,71,6,86,85,1,+14,
+Frazier,2024,Carroll Valley,71,6,93,89,4,+18,
+Frazier,2025,Gettysburg National,71,5,90,90,0,+19,
+Frazier,2025,Carroll Valley,71,5,98,98,0,+27,
+Frazier,SUMMARY,,,,,,,+19.50 avg,"hcp=12, n=4"
+,,,,,,,,,
+Gunter,2024,Gettysburg National,71,9,92,89,3,+18,
+Gunter,2024,Carroll Valley,71,9,99,96,3,+25,
+Gunter,2025,Gettysburg National,71,9,92,92,0,+21,
+Gunter,2025,Carroll Valley,71,9,102,102,0,+31,
+Gunter,SUMMARY,,,,,,,+23.75 avg,"hcp=16, n=4"
+,,,,,,,,,
+Harvey,2024,Gettysburg National,71,14,108,103,5,+32,
+Harvey,2024,Carroll Valley,71,14,92,92,0,+21,
+Harvey,2025,Gettysburg National,71,14,101,100,1,+29,
+Harvey,2025,Carroll Valley,71,14,108,108,0,+37,
+Harvey,SUMMARY,,,,,,,+29.75 avg,"hcp=22, n=4"
+,,,,,,,,,
+Joe M,2025,Gettysburg National,71,0,82,82,0,+11,
+Joe M,2025,Carroll Valley,71,0,75,75,0,+4,
+Joe M,SUMMARY,,,,,,,+7.50 avg,"hcp=0, n=2"
+,,,,,,,,,
+John K,2025,Gettysburg National,71,0,78,78,0,+7,
+John K,2025,Carroll Valley,71,0,79,79,0,+8,
+John K,SUMMARY,,,,,,,+7.50 avg,"hcp=0, n=2"
+,,,,,,,,,
+Matt,2024,Gettysburg National,71,5,95,93,2,+22,
+Matt,2024,Carroll Valley,71,5,95,91,4,+20,
+Matt,2025,Gettysburg National,71,8,96,95,1,+24,
+Matt,2025,Carroll Valley,71,8,98,98,0,+27,
+Matt,SUMMARY,,,,,,,+23.25 avg,"hcp=15, n=4"
+,,,,,,,,,
+Matt K,2025,Gettysburg National,71,16,90,90,0,+19,
+Matt K,2025,Carroll Valley,71,16,97,97,0,+26,
+Matt K,SUMMARY,,,,,,,+22.50 avg,"hcp=15, n=2"
+,,,,,,,,,
+Oaks,2024,Gettysburg National,71,4,94,90,4,+19,
+Oaks,2024,Carroll Valley,71,4,91,90,1,+19,
+Oaks,2025,Gettysburg National,71,8,90,90,0,+19,
+Oaks,2025,Carroll Valley,71,8,102,102,0,+31,
+Oaks,SUMMARY,,,,,,,+22.00 avg,"hcp=14, n=4"
+,,,,,,,,,
+Pete,2024,Gettysburg National,71,7,90,89,1,+18,
+Pete,2025,Gettysburg National,71,12,88,88,0,+17,
+Pete,2025,Carroll Valley,71,12,94,94,0,+23,
+Pete,2025,Carroll Valley,71,12,94,94,0,+23,duplicated (missed 2024 CV)
+Pete,SUMMARY,,,,,,,+20.25 avg,"hcp=12, n=4"
+,,,,,,,,,
+Tbone,2024,Gettysburg National,71,7,91,90,1,+19,
+Tbone,2024,Carroll Valley,71,7,87,87,0,+16,
+Tbone,2025,Gettysburg National,71,7,88,88,0,+17,
+Tbone,2025,Carroll Valley,71,7,93,93,0,+22,
+Tbone,SUMMARY,,,,,,,+18.50 avg,"hcp=11, n=4"
+,,,,,,,,,
+Tim,2024,Gettysburg National,71,0,88,87,1,+16,
+Tim,2024,Carroll Valley,71,0,82,81,1,+10,
+Tim,2025,Gettysburg National,71,2,81,81,0,+10,
+Tim,2025,Carroll Valley,71,2,93,93,0,+22,
+Tim,SUMMARY,,,,,,,+14.50 avg,"hcp=7, n=4"
+,,,,,,,,,
+Tom K,2024,Gettysburg National,71,10,100,100,0,+29,
+Tom K,2024,Carroll Valley,71,10,107,106,1,+35,
+Tom K,2025,Gettysburg National,71,13,86,86,0,+15,
+Tom K,2025,Carroll Valley,71,13,97,97,0,+26,
+Tom K,SUMMARY,,,,,,,+26.25 avg,"hcp=18, n=4"
+,,,,,,,,,
+Tommy,2024,Gettysburg National,71,14,93,93,0,+22,
+Tommy,2024,Carroll Valley,71,14,105,105,0,+34,
+Tommy,2025,Gettysburg National,71,13,104,104,0,+33,
+Tommy,2025,Carroll Valley,71,13,93,93,0,+22,
+Tommy,SUMMARY,,,,,,,+27.75 avg,"hcp=20, n=4"
+,,,,,,,,,
+Tophe,2024,Gettysburg National,71,4,96,94,2,+23,
+Tophe,2024,Carroll Valley,71,4,92,92,0,+21,
+Tophe,2025,Gettysburg National,71,6,95,95,0,+24,
+Tophe,2025,Carroll Valley,71,6,94,94,0,+23,
+Tophe,SUMMARY,,,,,,,+22.75 avg,"hcp=15, n=4"
+,,,,,,,,,
+Trock,2024,Gettysburg National,71,18,114,106,8,+35,
+Trock,2024,Carroll Valley,71,18,129,117,12,+46,
+Trock,2025,Gettysburg National,71,20,102,101,1,+30,
+Trock,2025,Carroll Valley,71,20,111,111,0,+40,
+Trock,SUMMARY,,,,,,,+37.75 avg,"hcp=30, n=4"
+,,,,,,,,,
+Uncle Joe,2024,Gettysburg National,71,11,96,95,1,+24,
+Uncle Joe,2024,Carroll Valley,71,11,90,90,0,+19,
+Uncle Joe,2025,Gettysburg National,71,10,90,90,0,+19,
+Uncle Joe,2025,Carroll Valley,71,10,96,96,0,+25,
+Uncle Joe,SUMMARY,,,,,,,+21.75 avg,"hcp=14, n=4"
+,,,,,,,,,
+Uncle Mike,2024,Gettysburg National,71,17,111,106,5,+35,
+Uncle Mike,2024,Carroll Valley,71,17,124,113,11,+42,
+Uncle Mike,SUMMARY,,,,,,,+38.50 avg,"hcp=31, n=2"
+,,,,,,,,,
+Vince,2024,Gettysburg National,71,8,85,85,0,+14,
+Vince,2024,Carroll Valley,71,8,97,96,1,+25,
+Vince,2025,Gettysburg National,71,5,89,89,0,+18,
+Vince,2025,Carroll Valley,71,5,93,93,0,+22,
+Vince,SUMMARY,,,,,,,+19.75 avg,"hcp=12, n=4"

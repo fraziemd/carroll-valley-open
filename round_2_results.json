@@ -1,0 +1,34 @@
+{
+  "round_number": 2,
+  "round_name": "Round 2 - Match Play",
+  "individual_scores": {
+    "andrew": 3.75,
+    "tom_k": 3.75,
+    "pete": 1.25,
+    "dan": 1.25,
+    "ben": 1.25,
+    "joe_m": 1.25,
+    "john_k": 3.75,
+    "tim": 3.75,
+    "frazier": 3.75,
+    "tbone": 3.75,
+    "vince": 1.25,
+    "tophe": 1.25,
+    "gunter": 3.75,
+    "matt": 3.75,
+    "oaks": 1.25,
+    "uncle_joe": 1.25,
+    "harvey": 3.75,
+    "matt_k": 3.75,
+    "tommy": 1.25,
+    "trock": 1.25
+  },
+  "team_scores": {
+    "Blue": 10.0,
+    "Orange": 7.5,
+    "Black": 10.0,
+    "Green": 10.0,
+    "White": 12.5
+  },
+  "timestamp": "2025-08-08 19:48:39"
+}

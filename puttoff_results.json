@@ -1,0 +1,19 @@
+{
+  "round_number": "puttoff",
+  "round_name": "Team Putt-Off",
+  "individual_scores": {
+    "joe_m": 2,
+    "john_k": 2,
+    "gunter": 2,
+    "matt_k": 2,
+    "tim": 1,
+    "oaks": 1,
+    "andrew": 1,
+    "trock": 1
+  },
+  "team_scores": {
+    "White": 8,
+    "Blue": 4
+  },
+  "timestamp": "2025-08-09 23:15:59"
+}

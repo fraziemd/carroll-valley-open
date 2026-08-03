@@ -59,7 +59,8 @@ def score_round(cfg, round_number, scores, manual):
         handicaps.update(rcfg.get('handicap_overrides', {}))
         result = scoring.calculate_best_ball_individual(
             scores, cfg.course_holes(round_number), handicaps,
-            cfg.partners(round_number), cfg.foursomes(round_number))
+            cfg.partners(round_number), cfg.foursomes(round_number),
+            allocation=cfg.handicap_allocation)
         return result['player_points'], result['breakdown'], result['details']
 
     if style == 'match_play':

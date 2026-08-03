@@ -1,0 +1,8 @@
+# Dependencies for the 2026 JDCVO scoring system (jdcvo/ + app_2026.py).
+# The old requirements.txt (for app.py) is left untouched.
+streamlit>=1.50
+pandas>=2.0
+requests>=2.31
+beautifulsoup4>=4.12
+gspread>=6.0
+google-auth>=2.23

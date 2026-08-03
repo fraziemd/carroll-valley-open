@@ -7,6 +7,8 @@
   "_comment_sheet": "ID of the Google Sheet the new system publishes to. LEAVE EMPTY until a NEW sheet is created for 2026 -- the 2025 sheet must not be overwritten. When empty, the pipeline writes local JSON only.",
   "google_sheet_key": "1xkuYfhvUHg4cxq62D2Fw004zSReNUkEyWR8n5xc42sY",
   "data_dir": "data_2026",
+  "handicap_allocation": "full",
+  "_comment_handicap_allocation": "full = every stroke the handicap says (a 30 gets 30). capped = old notebook rule of max 1 stroke/hole. Use full.",
   "_comment_rounds": "One entry per round. scoring_style: best_ball_individual | match_play | team_scramble | two_man_scramble. scrape_url: PlayThru leaderboard URL (null for manual-entry rounds). URLs below are the STILL-LIVE 2025 events, kept for end-to-end testing; replace with 2026 eids before the event.",
   "rounds": {
     "1": {

@@ -1,0 +1,35 @@
+{
+  "round_number": 3,
+  "round_name": "Round 3 - Best Ball Individual",
+  "individual_scores": {
+    "joe_m": 17.0,
+    "john_k": 10.4,
+    "ben": 7.2,
+    "tbone": 9.8,
+    "vince": 7.4,
+    "tommy": 12.1,
+    "tim": 3.6,
+    "pete": 12.4,
+    "tophe": 5.8,
+    "uncle_joe": 7.9,
+    "tom_k": 8.6,
+    "andrew": 5.2,
+    "matt_k": 8.4,
+    "matt": 3.0,
+    "frazier": 10.0,
+    "dan": 6.5,
+    "oaks": 4.4,
+    "gunter": 13.0,
+    "harvey": 3.0,
+    "trock": 3.2
+  },
+  "team_scores": {
+    "White": 48.8,
+    "Green": 21.1,
+    "Black": 44.3,
+    "Orange": 28.299999999999997,
+    "Blue": 16.400000000000002
+  },
+  "timestamp": "2025-08-09 13:08:37",
+  "_comment": "Regenerated under FULL handicap allocation (no 18-stroke ceiling). Differs from the totals published to the 2025 Google Sheet, which used the notebook capped rule."
+}

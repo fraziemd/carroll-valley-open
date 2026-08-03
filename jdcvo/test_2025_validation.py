@@ -1,8 +1,12 @@
-"""Validate the jdcvo scoring engine against saved 2025 tournament results.
+"""Validate the jdcvo scoring engine against 2025 tournament scorecards.
 
 Reads the 2025 input files (golf_scores_round*.json, players_2025.json,
 courses.json) and asserts the engine reproduces the saved outputs
 (round_*_results.json, round_5_handicaps.json) exactly.
+
+Rounds 1 and 3 fixtures use FULL handicap allocation (every stroke the
+handicap says). That corrects the old notebook's 1-stroke-per-hole cap;
+published 2025 sheet totals under the capped rule will not match these.
 
 Run from the repo root:  python3 -m jdcvo.test_2025_validation
 or with pytest:          pytest jdcvo/test_2025_validation.py

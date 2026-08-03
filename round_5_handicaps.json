@@ -1,0 +1,248 @@
+{
+  "individual_handicaps": {
+    "Joe M": {
+      "round_1_adjusted_total": 82,
+      "round_3_adjusted_total": 75,
+      "round_1_relative": 11,
+      "round_3_relative": 4,
+      "avg_relative": 7.5,
+      "handicap": 7
+    },
+    "John K": {
+      "round_1_adjusted_total": 78,
+      "round_3_adjusted_total": 79,
+      "round_1_relative": 7,
+      "round_3_relative": 8,
+      "avg_relative": 7.5,
+      "handicap": 7
+    },
+    "Gunter": {
+      "round_1_adjusted_total": 92,
+      "round_3_adjusted_total": 102,
+      "round_1_relative": 21,
+      "round_3_relative": 31,
+      "avg_relative": 26.0,
+      "handicap": 26
+    },
+    "Matt K": {
+      "round_1_adjusted_total": 90,
+      "round_3_adjusted_total": 97,
+      "round_1_relative": 19,
+      "round_3_relative": 26,
+      "avg_relative": 22.5,
+      "handicap": 22
+    },
+    "Tim": {
+      "round_1_adjusted_total": 81,
+      "round_3_adjusted_total": 93,
+      "round_1_relative": 10,
+      "round_3_relative": 22,
+      "avg_relative": 16.0,
+      "handicap": 16
+    },
+    "Oaks": {
+      "round_1_adjusted_total": 90,
+      "round_3_adjusted_total": 102,
+      "round_1_relative": 19,
+      "round_3_relative": 31,
+      "avg_relative": 25.0,
+      "handicap": 25
+    },
+    "Andrew": {
+      "round_1_adjusted_total": 95,
+      "round_3_adjusted_total": 96,
+      "round_1_relative": 24,
+      "round_3_relative": 25,
+      "avg_relative": 24.5,
+      "handicap": 24
+    },
+    "Trock": {
+      "round_1_adjusted_total": 102,
+      "round_3_adjusted_total": 111,
+      "round_1_relative": 31,
+      "round_3_relative": 40,
+      "avg_relative": 35.5,
+      "handicap": 35
+    },
+    "Ben": {
+      "round_1_adjusted_total": 80,
+      "round_3_adjusted_total": 87,
+      "round_1_relative": 9,
+      "round_3_relative": 16,
+      "avg_relative": 12.5,
+      "handicap": 12
+    },
+    "Matt": {
+      "round_1_adjusted_total": 95,
+      "round_3_adjusted_total": 98,
+      "round_1_relative": 24,
+      "round_3_relative": 27,
+      "avg_relative": 25.5,
+      "handicap": 25
+    },
+    "Uncle Joe": {
+      "round_1_adjusted_total": 90,
+      "round_3_adjusted_total": 96,
+      "round_1_relative": 19,
+      "round_3_relative": 25,
+      "avg_relative": 22.0,
+      "handicap": 22
+    },
+    "Harvey": {
+      "round_1_adjusted_total": 100,
+      "round_3_adjusted_total": 108,
+      "round_1_relative": 29,
+      "round_3_relative": 37,
+      "avg_relative": 33.0,
+      "handicap": 33
+    },
+    "Frazier": {
+      "round_1_adjusted_total": 90,
+      "round_3_adjusted_total": 98,
+      "round_1_relative": 19,
+      "round_3_relative": 27,
+      "avg_relative": 23.0,
+      "handicap": 23
+    },
+    "Tbone": {
+      "round_1_adjusted_total": 88,
+      "round_3_adjusted_total": 93,
+      "round_1_relative": 17,
+      "round_3_relative": 22,
+      "avg_relative": 19.5,
+      "handicap": 19
+    },
+    "Pete": {
+      "round_1_adjusted_total": 88,
+      "round_3_adjusted_total": 94,
+      "round_1_relative": 17,
+      "round_3_relative": 23,
+      "avg_relative": 20.0,
+      "handicap": 20
+    },
+    "Tommy": {
+      "round_1_adjusted_total": 104,
+      "round_3_adjusted_total": 93,
+      "round_1_relative": 33,
+      "round_3_relative": 22,
+      "avg_relative": 27.5,
+      "handicap": 27
+    },
+    "Vince": {
+      "round_1_adjusted_total": 89,
+      "round_3_adjusted_total": 93,
+      "round_1_relative": 18,
+      "round_3_relative": 22,
+      "avg_relative": 20.0,
+      "handicap": 20
+    },
+    "Tophe": {
+      "round_1_adjusted_total": 95,
+      "round_3_adjusted_total": 94,
+      "round_1_relative": 24,
+      "round_3_relative": 23,
+      "avg_relative": 23.5,
+      "handicap": 23
+    },
+    "Tom K": {
+      "round_1_adjusted_total": 86,
+      "round_3_adjusted_total": 97,
+      "round_1_relative": 15,
+      "round_3_relative": 26,
+      "avg_relative": 20.5,
+      "handicap": 20
+    },
+    "Dan": {
+      "round_1_adjusted_total": 104,
+      "round_3_adjusted_total": 100,
+      "round_1_relative": 33,
+      "round_3_relative": 29,
+      "avg_relative": 31.0,
+      "handicap": 31
+    }
+  },
+  "pair_handicaps": {
+    "Joe M & Matt K": {
+      "player_a": "Joe M",
+      "player_b": "Matt K",
+      "player_a_handicap": 7,
+      "player_b_handicap": 22,
+      "pair_handicap": 8,
+      "calculation": "(7\u00d72 + 22\u00f72)\u00f73 = (14 + 11)\u00f73 = 25\u00f73 = 8"
+    },
+    "John K & Gunter": {
+      "player_a": "John K",
+      "player_b": "Gunter",
+      "player_a_handicap": 7,
+      "player_b_handicap": 26,
+      "pair_handicap": 9,
+      "calculation": "(7\u00d72 + 26\u00f72)\u00f73 = (14 + 13)\u00f73 = 27\u00f73 = 9"
+    },
+    "Tim & Trock": {
+      "player_a": "Tim",
+      "player_b": "Trock",
+      "player_a_handicap": 16,
+      "player_b_handicap": 35,
+      "pair_handicap": 16,
+      "calculation": "(16\u00d72 + 35\u00f72)\u00f73 = (32 + 17)\u00f73 = 49\u00f73 = 16"
+    },
+    "Oaks & Andrew": {
+      "player_a": "Oaks",
+      "player_b": "Andrew",
+      "player_a_handicap": 25,
+      "player_b_handicap": 24,
+      "pair_handicap": 20,
+      "calculation": "(24\u00d72 + 25\u00f72)\u00f73 = (48 + 12)\u00f73 = 60\u00f73 = 20"
+    },
+    "Ben & Harvey": {
+      "player_a": "Ben",
+      "player_b": "Harvey",
+      "player_a_handicap": 12,
+      "player_b_handicap": 33,
+      "pair_handicap": 13,
+      "calculation": "(12\u00d72 + 33\u00f72)\u00f73 = (24 + 16)\u00f73 = 40\u00f73 = 13"
+    },
+    "Matt & Uncle Joe": {
+      "player_a": "Matt",
+      "player_b": "Uncle Joe",
+      "player_a_handicap": 25,
+      "player_b_handicap": 22,
+      "pair_handicap": 18,
+      "calculation": "(22\u00d72 + 25\u00f72)\u00f73 = (44 + 12)\u00f73 = 56\u00f73 = 18"
+    },
+    "Frazier & Tommy": {
+      "player_a": "Frazier",
+      "player_b": "Tommy",
+      "player_a_handicap": 23,
+      "player_b_handicap": 27,
+      "pair_handicap": 19,
+      "calculation": "(23\u00d72 + 27\u00f72)\u00f73 = (46 + 13)\u00f73 = 59\u00f73 = 19"
+    },
+    "Tbone & Pete": {
+      "player_a": "Tbone",
+      "player_b": "Pete",
+      "player_a_handicap": 19,
+      "player_b_handicap": 20,
+      "pair_handicap": 16,
+      "calculation": "(19\u00d72 + 20\u00f72)\u00f73 = (38 + 10)\u00f73 = 48\u00f73 = 16"
+    },
+    "Vince & Dan": {
+      "player_a": "Vince",
+      "player_b": "Dan",
+      "player_a_handicap": 20,
+      "player_b_handicap": 31,
+      "pair_handicap": 18,
+      "calculation": "(20\u00d72 + 31\u00f72)\u00f73 = (40 + 15)\u00f73 = 55\u00f73 = 18"
+    },
+    "Tophe & Tom K": {
+      "player_a": "Tophe",
+      "player_b": "Tom K",
+      "player_a_handicap": 23,
+      "player_b_handicap": 20,
+      "pair_handicap": 17,
+      "calculation": "(20\u00d72 + 23\u00f72)\u00f73 = (40 + 11)\u00f73 = 51\u00f73 = 17"
+    }
+  },
+  "round_1_par": 71,
+  "round_3_par": 71
+}

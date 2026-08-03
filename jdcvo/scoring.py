@@ -156,21 +156,48 @@ PAIR_POSITION_POINTS = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
 SURVIVAL_POINTS = 2.0
 
 
-def handicap_strokes_for_hole(player_handicap, hole_stroke_index):
-    """1 stroke on holes whose stroke index <= player handicap, else 0."""
-    return 1 if hole_stroke_index <= player_handicap else 0
+# Stroke allocation rules. FULL is the standard allocation: every stroke the
+# handicap says. CAPPED is the old notebook rule (at most 1 stroke/hole), kept
+# only so tools can reproduce what was published in 2025 before the correction.
+# Default and event configs use FULL.
+ALLOCATION_CAPPED = 'capped'
+ALLOCATION_FULL = 'full'
 
 
-def net_hole_score(gross, par, hole_stroke_index, player_handicap):
+def handicap_strokes_for_hole(player_handicap, hole_stroke_index,
+                              allocation=ALLOCATION_FULL):
+    """Handicap strokes received on one hole.
+
+    FULL: floor(H/18) strokes on every hole plus one more on the (H mod 18)
+    hardest, totalling exactly H. A 30 gets 30 strokes.
+    CAPPED: 1 stroke where the hole's stroke index <= the handicap, else 0, so
+    at most 18 strokes total. Legacy notebook behaviour; not used by default.
+    """
+    if allocation == ALLOCATION_CAPPED:
+        return 1 if hole_stroke_index <= player_handicap else 0
+    if allocation == ALLOCATION_FULL:
+        if player_handicap < 0:
+            # Plus handicap gives strokes back on the hardest holes. No player
+            # in this event is a plus, so this branch is untested in anger.
+            return -1 if hole_stroke_index <= -player_handicap else 0
+        base, extra = divmod(player_handicap, 18)
+        return base + (1 if hole_stroke_index <= extra else 0)
+    raise ValueError(f"unknown handicap allocation {allocation!r}; expected "
+                     f"{ALLOCATION_CAPPED!r} or {ALLOCATION_FULL!r}")
+
+
+def net_hole_score(gross, par, hole_stroke_index, player_handicap,
+                   allocation=ALLOCATION_FULL):
     """Net score for a hole, capped at net double bogey."""
-    strokes = handicap_strokes_for_hole(player_handicap, hole_stroke_index)
+    strokes = handicap_strokes_for_hole(player_handicap, hole_stroke_index,
+                                        allocation)
     net = gross - strokes
     cap = par + 2 + strokes  # net double bogey cap
     return min(net, cap)
 
 
 def calculate_best_ball_individual(scores, course_holes, handicaps, partners,
-                                   foursomes):
+                                   foursomes, allocation=ALLOCATION_FULL):
     """Score a best-ball individual round (2025 Rounds 1 and 3).
 
     Three point sources per player:
@@ -203,7 +230,8 @@ def calculate_best_ball_individual(scores, course_holes, handicaps, partners,
             hole = int(hole_key)
             info = course_holes[str(hole)]
             par = info['par']
-            net = net_hole_score(gross, par, info['handicap'], player_handicap)
+            net = net_hole_score(gross, par, info['handicap'], player_handicap,
+                                 allocation)
             nets[hole] = net
 
             pts = 0.0
@@ -621,7 +649,8 @@ def calculate_two_man_scramble(scores, course_holes, pair_separator=" and "):
 
 def calculate_round_5_handicaps(round_1_scores, round_3_scores,
                                 round_1_course_holes, round_3_course_holes,
-                                handicaps, round_5_partners):
+                                handicaps, round_5_partners,
+                                allocation=ALLOCATION_FULL):
     """Compute Round 5 pair handicaps from Round 1 and Round 3 scores.
 
     Each player's gross scores are capped at net double bogey, totaled, and
@@ -638,7 +667,8 @@ def calculate_round_5_handicaps(round_1_scores, round_3_scores,
         total = 0
         for hole_key, gross in entry['hole_scores'].items():
             info = course_holes[str(int(hole_key))]
-            strokes = handicap_strokes_for_hole(player_handicap, info['handicap'])
+            strokes = handicap_strokes_for_hole(player_handicap,
+                                               info['handicap'], allocation)
             total += min(gross, info['par'] + 2 + strokes)
         return total
 

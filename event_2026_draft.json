@@ -6,6 +6,8 @@
   "courses_file": "courses.json",
   "google_sheet_key": "",
   "data_dir": "data_2026_draft",
+  "_comment_handicaps": "full = every stroke the handicap says (floor(H/18) on every hole plus one more on the H mod 18 hardest). A 30 gets 30. The old notebook 'capped' rule (max 1/hole) is no longer used.",
+  "handicap_allocation": "full",
   "_comment_rounds": "Schedule as circulated 2026-07-27. scrape_url values are PLACEHOLDERS, not real PlayThru events - they only need to be non-empty so the pipeline reads saved scores instead of skipping the round. Replace each with the real eid URL when the events exist.",
   "rounds": {
     "1": {

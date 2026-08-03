@@ -28,6 +28,14 @@ class EventConfig:
         self.google_sheet_key = self.raw.get('google_sheet_key') or None
         self.data_dir = self._path(self.raw.get('data_dir', f'data_{self.year}'))
 
+        # 'full' (every stroke the handicap says) or 'capped' (max 1 stroke/
+        # hole — the old notebook rule). Defaults to 'full'.
+        self.handicap_allocation = self.raw.get('handicap_allocation', 'full')
+        if self.handicap_allocation not in ('capped', 'full'):
+            raise ValueError(
+                f"handicap_allocation must be 'capped' or 'full', got "
+                f"{self.handicap_allocation!r} in {config_path}")
+
     def _path(self, relative):
         return os.path.join(self.base_dir, relative)
 
