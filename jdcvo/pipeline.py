@@ -265,7 +265,14 @@ def run_pipeline(config_path='event_2026.json', scrape=True, log=print,
     if sheets is not None and publish:
         try:
             sheets.publish_leaderboards(results, cfg.round_numbers())
-            sheets.publish_raw_scores(results['raw_scores'])
+            # Deliberately the SCRAPED scores, not results['raw_scores'] (which
+            # has corrections applied). Locked rounds and failed scrapes read
+            # this tab back as their source, so publishing corrected values
+            # would bake an override in permanently: the next cycle would see
+            # it as a real score, and deleting the correction would no longer
+            # revert the hole. Corrections stay a separate layer, re-applied on
+            # top every cycle, and remain reversible.
+            sheets.publish_raw_scores(raw)
             sheets.write_round_state(
                 {str(n): round_states.get(str(n), {}) for n in cfg.round_numbers()},
                 results['round_statuses'])

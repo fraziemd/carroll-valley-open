@@ -460,7 +460,13 @@ class SheetsStore:
         return entries
 
     def publish_raw_scores(self, all_raw):
-        """Write a human-readable backup of raw hole scores per round."""
+        """Write a human-readable backup of raw hole scores per round.
+
+        Must be given the SCRAPED scores, not corrected ones: read_raw_scores
+        reads this tab back as the source for locked rounds and failed scrapes,
+        so a corrected value written here would become indistinguishable from a
+        real score and could never be undone. See the call site in pipeline.py.
+        """
         headers = ['Round', 'Name'] + [str(h) for h in range(1, 19)] + ['Total']
         rows = [headers]
         for round_number, scores in sorted(all_raw.items(), key=lambda x: int(x[0])):
