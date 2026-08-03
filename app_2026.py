@@ -1075,68 +1075,7 @@ def page_admin(cfg, results, logs):
                if adj_rows else "."))
 
     with tab_match:
-        st.markdown("Enter each pair's match-play points (both players in the "
-                    "pair receive the amount).")
-
-        existing = store.read_match_play() if is_sheets else local.read_match_play()
-        # Later entries supersede earlier ones for the same pair, matching how
-        # the scoring engine keys pair points, so a correction doesn't read as
-        # a second award.
-        entered = {}
-        for r in existing:
-            entered[frozenset(r['players'])] = float(r['points'])
-
-        # The pairs are fixed by the roster, so offer them directly rather than
-        # letting two independent player pickers produce a pair that doesn't exist.
-        partners = cfg.partners(2)
-        seen, pairs = set(), []
-        for name in partners:
-            partner = partners[name]
-            key = frozenset((name, partner))
-            if key in seen or partner not in partners:
-                continue
-            seen.add(key)
-            pairs.append(tuple(sorted((name, partner))))
-        pairs.sort()
-
-        if not pairs:
-            st.warning("No Round 2 pairs are defined in the roster file, so "
-                       "there is nothing to enter here.")
-        else:
-            def pair_label(pair):
-                label = ' & '.join(pair)
-                got = entered.get(frozenset(pair))
-                return label if got is None else f"{label}  ✓ {fmt_pts(got)}"
-
-            pair = st.selectbox("Pair", pairs, format_func=pair_label,
-                                key="mp_pair")
-            pts = st.number_input("Points (0-5)", min_value=0.0, max_value=5.0,
-                                  step=0.25, key="mp_pts")
-            if st.button("Save match-play result"):
-                p1, p2 = pair
-                if is_sheets:
-                    store.append_match_play(p1, p2, pts)
-                else:
-                    rows = [r for r in local.read_match_play()
-                            if frozenset(r['players']) != frozenset(pair)]
-                    rows.append({'players': [p1, p2], 'points': pts})
-                    local.write_match_play(rows)
-                refresh_now()
-                st.success(f"Saved: {p1} & {p2} → {fmt_pts(pts)} each")
-                st.rerun()
-
-            missing = [p for p in pairs if frozenset(p) not in entered]
-            if missing:
-                st.caption(f"Still missing {len(missing)} of {len(pairs)}: "
-                           + ', '.join(' & '.join(p) for p in missing))
-            else:
-                st.caption(f"All {len(pairs)} pairs entered.")
-
-        if entered:
-            st.dataframe(pd.DataFrame(
-                [{'Pair': ' & '.join(sorted(k)), 'Points': fmt_pts(v)}
-                 for k, v in sorted(entered.items(), key=lambda kv: sorted(kv[0]))]),
-                width='stretch', hide_index=True)
+        render_match_play_admin(cfg, store, local, is_sheets)
 
     with tab_adjust:
         st.markdown("One-off point adjustments (positive or negative). "
@@ -1163,6 +1102,150 @@ def page_admin(cfg, results, logs):
 
     with tab_sunday:
         render_sunday_handicap_admin(cfg, results, store, local, is_sheets)
+
+
+MATCH_PLAY_POINTS = 5.0
+
+
+def round_2_matches(cfg):
+    """The Round 2 matches, as ((pair A), (pair B)) tuples.
+
+    A match is the two pairs sharing a foursome — that is the unit the points
+    belong to, since the five points are split between them. Derived from the
+    roster rather than entered by hand so the app cannot disagree with it.
+    """
+    partners, foursomes = cfg.partners(2), cfg.foursomes(2)
+    matches, seen = [], set()
+    for name in sorted(partners):
+        partner = partners.get(name)
+        others = foursomes.get(name) or []
+        if not partner or len(others) != 2:
+            continue
+        a = tuple(sorted((name, partner)))
+        b = tuple(sorted(others))
+        # Both pairs must be genuine partnerships, or the roster disagrees
+        # with itself and we should not invent a match from it.
+        if partners.get(b[0]) != b[1]:
+            continue
+        key = frozenset((a, b))
+        if key in seen:
+            continue
+        seen.add(key)
+        matches.append(tuple(sorted((a, b))))
+    matches.sort()
+    return matches
+
+
+def render_match_play_admin(cfg, store, local, is_sheets):
+    """Round 2 entry, one match at a time.
+
+    The five points are always split between the two pairs in a match, so only
+    one number is ever typed: the other pair gets the remainder. Entering the
+    match rather than the pair makes a split that doesn't total five
+    impossible to record in the first place, which a check after the fact
+    could only detect, not resolve — it can tell you a foursome is wrong but
+    not which of the two numbers to fix.
+    """
+    st.markdown(f"Enter one pair's points; the other pair automatically gets "
+                f"the rest of the {fmt_pts(MATCH_PLAY_POINTS)}. Both players "
+                f"in a pair receive their pair's amount.")
+
+    existing = store.read_match_play() if is_sheets else local.read_match_play()
+    # Later rows supersede earlier ones for the same pair, matching how the
+    # scoring engine keys pair points, so a correction never reads as a second
+    # award.
+    entered = {}
+    for r in existing:
+        entered[frozenset(r['players'])] = float(r['points'])
+
+    matches = round_2_matches(cfg)
+    if not matches:
+        st.warning("No Round 2 matches could be built from the roster file. "
+                   "Every player needs round_2_partner and a two-player "
+                   "round_2_foursome.")
+        return
+
+    def pair_name(pair):
+        return ' & '.join(pair)
+
+    def match_label(match):
+        a, b = match
+        got_a, got_b = entered.get(frozenset(a)), entered.get(frozenset(b))
+        label = f"{pair_name(a)}  vs  {pair_name(b)}"
+        if got_a is None and got_b is None:
+            return label
+        return (f"{label}   ✓ {fmt_pts(got_a or 0)} – "
+                f"{fmt_pts(got_b or 0)}")
+
+    match = st.selectbox("Match", matches, format_func=match_label,
+                         key="mp_match")
+    pair_a, pair_b = match
+
+    prior = entered.get(frozenset(pair_a))
+    pts_a = st.number_input(
+        f"Points for {pair_name(pair_a)}",
+        min_value=0.0, max_value=MATCH_PLAY_POINTS, step=0.25,
+        value=float(prior) if prior is not None else 0.0,
+        key=f"mp_pts_{'_'.join(pair_a)}")
+    pts_b = MATCH_PLAY_POINTS - pts_a
+    st.info(f"**{pair_name(pair_a)}** get {fmt_pts(pts_a)}  ·  "
+            f"**{pair_name(pair_b)}** get {fmt_pts(pts_b)}")
+
+    if st.button("Save match result"):
+        # Replace any existing rows for either pair, then write both, so the
+        # stored split always totals five even when correcting an entry.
+        drop = {frozenset(pair_a), frozenset(pair_b)}
+        rows = [r for r in existing if frozenset(r['players']) not in drop]
+        rows.append({'players': list(pair_a), 'points': pts_a})
+        rows.append({'players': list(pair_b), 'points': pts_b})
+        if is_sheets:
+            store.write_match_play(rows)
+        else:
+            local.write_match_play(rows)
+        refresh_now()
+        st.success(f"Saved: {pair_name(pair_a)} {fmt_pts(pts_a)}, "
+                   f"{pair_name(pair_b)} {fmt_pts(pts_b)}")
+        st.rerun()
+
+    done = [m for m in matches
+            if frozenset(m[0]) in entered and frozenset(m[1]) in entered]
+    if len(done) < len(matches):
+        todo = [m for m in matches if m not in done]
+        st.caption(f"{len(done)} of {len(matches)} matches entered. Still to "
+                   f"come: " + '; '.join(match_label(m) for m in todo))
+    else:
+        st.caption(f"All {len(matches)} matches entered.")
+
+    rows = []
+    for a, b in matches:
+        got_a, got_b = entered.get(frozenset(a)), entered.get(frozenset(b))
+        if got_a is None and got_b is None:
+            continue
+        total = (got_a or 0) + (got_b or 0)
+        rows.append({
+            'Pair': pair_name(a), 'Points': fmt_pts(got_a or 0),
+            'Opponent': pair_name(b), 'Their points': fmt_pts(got_b or 0),
+            'Match total': fmt_pts(total),
+            # Only reachable by editing the sheet by hand; the UI can't
+            # produce it. Worth surfacing rather than silently scoring it.
+            'OK': '✓' if abs(total - MATCH_PLAY_POINTS) < 1e-9 else '✗',
+        })
+    if rows:
+        st.dataframe(pd.DataFrame(rows), width='stretch', hide_index=True)
+        bad = [r for r in rows if r['OK'] == '✗']
+        if bad:
+            st.error(f"{len(bad)} match(es) don't total "
+                     f"{fmt_pts(MATCH_PLAY_POINTS)}. That can only come from "
+                     f"a hand edit in the sheet — re-save the match here to "
+                     f"fix it.")
+
+    orphans = sorted(
+        (pair_name(sorted(k)) for k in entered
+         if not any(frozenset(p) == k for m in matches for p in m)),)
+    if orphans:
+        st.warning("These stored pairs aren't Round 2 matches in the current "
+                   "roster, so their points are being credited to nobody's "
+                   "match: " + ', '.join(orphans))
 
 
 def render_sunday_handicap_admin(cfg, results, store, local, is_sheets):

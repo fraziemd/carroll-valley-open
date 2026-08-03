@@ -343,6 +343,24 @@ class SheetsStore:
         self._retry(ws.append_row, [player1, player2, points])
         self._invalidate_cache()
 
+    def write_match_play(self, results):
+        """Replace the whole Match Play worksheet.
+
+        Used when saving a match, which writes both pairs at once and must be
+        able to correct an earlier entry. Appending would leave the superseded
+        rows behind: the scoring engine tolerates that (last row wins) but a
+        human reading the sheet would see a pair credited twice.
+        """
+        headers = MANUAL_WORKSHEETS['Match Play'][0]
+        ws = self._worksheet('Match Play', headers)
+        rows = [headers]
+        for r in results:
+            players = list(r['players'])
+            rows.append([players[0], players[1], r['points']])
+        self._retry(ws.clear)
+        self._retry(ws.update, rows)
+        self._invalidate_cache()
+
     def append_adjustment(self, player, points, note=''):
         ws = self._worksheet('Adjustments', MANUAL_WORKSHEETS['Adjustments'][0])
         self._retry(ws.append_row, [player, points, note])
