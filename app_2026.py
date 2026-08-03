@@ -573,6 +573,16 @@ def fmt_pts(x):
     return f"{round(x, 2):g}"
 
 
+def pts_val(x):
+    """A point value bound for a dataframe cell.
+
+    Same rounding as fmt_pts, but left numeric so the column still sorts and
+    right-aligns as a number. Without it a total that lands on a repeating
+    binary fraction renders in full — 30.099999999999998 rather than 30.1.
+    """
+    return round(float(x), 2)
+
+
 # Champion badges drawn as solid pixel blocks rather than font characters.
 # ("Press Start 2P" has no crown or trophy glyph, so a text character silently
 # falls back to a smooth system font despite the styling; real pixel blocks
@@ -702,9 +712,9 @@ def page_leaderboard(cfg, results):
     for pid, e in sorted(individual.items(), key=lambda x: -x[1]['total_points']):
         row = {'Player': e['name'], 'Team': e['team']}
         for n in cfg.round_numbers():
-            row[f'R{n}'] = e['round_scores'].get(str(n), 0)
-        row['Extras'] = e['round_scores'].get('extras', 0)
-        row['Total'] = e['total_points']
+            row[f'R{n}'] = pts_val(e['round_scores'].get(str(n), 0))
+        row['Extras'] = pts_val(e['round_scores'].get('extras', 0))
+        row['Total'] = pts_val(e['total_points'])
         rows.append(row)
     st.dataframe(pd.DataFrame(rows), width='stretch', hide_index=True)
 
@@ -803,9 +813,9 @@ def page_team(cfg, results):
         e = individual[pid]
         row = {'Player': e['name']}
         for n in cfg.round_numbers():
-            row[f'R{n}'] = e['round_scores'].get(str(n), 0)
-        row['Extras'] = e['round_scores'].get('extras', 0)
-        row['Total'] = e['total_points']
+            row[f'R{n}'] = pts_val(e['round_scores'].get(str(n), 0))
+        row['Extras'] = pts_val(e['round_scores'].get('extras', 0))
+        row['Total'] = pts_val(e['total_points'])
         rows.append(row)
     df = pd.DataFrame(sorted(rows, key=lambda r: -r['Total']))
     st.dataframe(df, width='stretch', hide_index=True)
@@ -1324,6 +1334,23 @@ def round_2_matches(cfg):
     return matches
 
 
+# Contests that run every round except the team scramble: two closest-to-pin
+# and two longest-drive prizes. Used only to decide when the Progress tab can
+# call a round's extras finished — chip-ins and anything else are unpredictable,
+# so they can't be part of a minimum.
+_EXPECTED_EXTRAS = {'closest_to_pin': 2, 'longest_drive': 2}
+
+
+def _required_extras(cfg, n):
+    """The extras a round is guaranteed to produce, as {category: count}.
+
+    Empty for the team scramble, which has no fixed contests.
+    """
+    if cfg.round_config(n)['scoring_style'] == 'team_scramble':
+        return {}
+    return dict(_EXPECTED_EXTRAS)
+
+
 def _round_finished(cfg, results, n, match_entries):
     """Whether a round's scoring input is all in.
 
@@ -1418,12 +1445,35 @@ def _timeline_steps(cfg, results, round_states, extras, match_entries):
                           'detail': detail, 'where': 'PlayThru / Round status tab'})
 
         got_extras = extras_by_round.get(k, [])
+        required = _required_extras(cfg, n)
+        have = {}
+        for e in got_extras:
+            cat = str(e['category'])
+            have[cat] = have.get(cat, 0) + 1
+        short = [(c, want, have.get(c, 0)) for c, want in required.items()
+                 if have.get(c, 0) < want]
+        if required:
+            # Show every expected contest, not just the missing ones, so the
+            # line reads the same whether none or most are in.
+            tally = ", ".join(
+                f"{have.get(c, 0)} of {want} {extra_category_label(c).lower()}"
+                for c, want in required.items())
+            if short:
+                detail = tally
+                ex_state = 'open' if started else 'waiting'
+            else:
+                detail = f"{tally} — all in ({len(got_extras)} entered)"
+                ex_state = 'done'
+        else:
+            # No fixed contests this round, so any entry settles it and none
+            # is a legitimate outcome rather than an outstanding task.
+            detail = f"{len(got_extras)} entered" if got_extras else "none needed"
+            ex_state = 'done' if (got_extras or status == state.COMPLETE) \
+                else ('open' if started else 'waiting')
         steps.append({
             'label': f"{label} — enter extras",
-            'state': ('done' if got_extras else
-                      'open' if started else 'waiting'),
-            'detail': (f"{len(got_extras)} entered"
-                       if got_extras else "none entered yet"),
+            'state': ex_state,
+            'detail': detail,
             'where': 'Extras tab'})
 
         if cfg.round_config(n)['scoring_style'] == 'two_man_scramble':
