@@ -173,14 +173,31 @@ In `courses.json`, each hole's `handicap` field is its **stroke index**
 > reproducing what the 2025 sheet published at the time. Don't use it for
 > anything else.
 
-### 2.4 Net score and the net double bogey cap
+### 2.4 Net score and the net double bogey limit
+
+Net double bogey means what it says: once the handicap strokes come off, the
+worst a player can write down on a hole is **two over par**.
 
 ```
-net = gross − strokes,  capped at  par + 2 + strokes
+net = min( gross − strokes,  par + 2 )
 ```
 
-The cap applies to both the handicap derivation (§2.1) and to net scoring in
-rounds 1 and 3.
+The same rule can be stated on the gross card — cap the gross at
+`par + 2 + strokes`, then take the strokes off — and that is how the handicap
+derivations in §2.1 and §2.5 express it. The two forms are arithmetically
+identical for every handicap, par and score.
+
+> Fixed in 2026: `net_hole_score` limited the *net* to `par + 2 + strokes`
+> rather than to `par + 2`, which is the same as capping the gross at
+> `par + 2 + 2 × strokes`. A 30-handicap making a 10 on a par 4 where he had two
+> strokes netted an 8 instead of a 6. The handicap functions were always
+> right; only this one was wrong, so the event ran two different caps.
+>
+> It touched nothing that has been published. Across both 2025 best-ball rounds
+> the worst hole anyone played was three past net par, and every hole that hit
+> the limit was one where the player received no stroke, so the two rules gave
+> the same answer on all 719 holes and the 2025 fixtures are unchanged. It
+> matters more now: 2026 handicaps run to 30 where 2025 stopped at 20.
 
 ### 2.5 The Sunday pair handicap
 

@@ -191,12 +191,16 @@ def handicap_strokes_for_hole(player_handicap, hole_stroke_index,
 
 def net_hole_score(gross, par, hole_stroke_index, player_handicap,
                    allocation=ALLOCATION_FULL):
-    """Net score for a hole, capped at net double bogey."""
+    """Net score for a hole, limited to net double bogey.
+
+    Net double bogey means exactly that: once the strokes come off, the worst a
+    player can write down is two over par. In gross terms the ceiling is
+    par + 2 + strokes, which is the same rule stated the other way round and is
+    how the handicap calculations express it.
+    """
     strokes = handicap_strokes_for_hole(player_handicap, hole_stroke_index,
                                         allocation)
-    net = gross - strokes
-    cap = par + 2 + strokes  # net double bogey cap
-    return min(net, cap)
+    return min(gross - strokes, par + 2)
 
 
 def calculate_best_ball_individual(scores, course_holes, handicaps, partners,
