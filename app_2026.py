@@ -562,6 +562,10 @@ def get_results():
 def refresh_now(publish=False):
     """Force the next cycle to recompute.
 
+    Only the results: the store and config are keyed on data_fingerprint(), so
+    a new deploy or roster already yields a fresh object without help, and
+    dropping them here re-authorised with Google on every save.
+
     ``publish`` should be True only when the sheet's own output tabs must be
     right straight away — locking a round, which freezes scoring onto the
     published Raw Scores, is the case that matters.
