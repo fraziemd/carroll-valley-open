@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Carroll Valley Open - Scoring Rules</title>
+</head>
+<body>
+
+<h1>The &ldquo;Jimmy D&rdquo; Carroll Valley Open &mdash; Scoring Rules</h1>
+
+<p><em>Everything a scorer needs to compute the event by hand from raw hole
+scores. Derived from the scoring engine as it stands in August 2026.</em></p>
+
+<hr>
+
+<h2>1. Scope and inputs</h2>
+
+<p>The event is five rounds. Every player carries a running point total; the
+winner is the man with the most points. Teams of four also compete.</p>
+
+<p><strong>For each player:</strong> name, team, event handicap (a whole
+number), and for each of Rounds 1, 2, 3 and 5, his partner and the two other
+men in his foursome.</p>
+
+<p><strong>For each course:</strong> every hole's par and stroke index, where 1
+is the hardest hole. Stroke indexes come from the scorecard and are the sole
+basis for allocating handicap strokes and for breaking ties.</p>
+
+<p><strong>For each round:</strong> gross hole scores. The exceptions are Round
+2, which has no cards at all, and Round 5, where players enter net scores.</p>
+
+<p>A hole score of <strong>0 means not yet played</strong> and is ignored
+everywhere. A round can therefore be scored on partial cards.</p>
+
+<hr>
+
+<h2>2. Handicaps set before the event</h2>
+
+<p>Done by hand before play begins. Each player's handicap is a measure of how
+many strokes he sits behind the best man in the field.</p>
+
+<p>Take Round 1 and Round 3 from each of the <strong>previous two years</strong>
+&mdash; four rounds. The window is exactly two years and it rolls: 2027 uses
+2025 and 2026 and drops 2024. For each of those rounds:</p>
+
+<ol>
+<li>Cap every hole's gross score at <strong>par + 2 + strokes</strong>, using
+the strokes that player received on that hole <em>in that year</em> (&sect;3).
+This is the net double bogey limit, and it stops one blow-up hole from
+inflating a handicap.</li>
+<li>Total the capped card.</li>
+<li>Subtract course par. That is the round's <strong>relative-to-par</strong>
+figure.</li>
+</ol>
+
+<p>Then average the available figures and index the field so the best player
+plays off scratch:</p>
+
+<blockquote>
+<p><code>raw&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= mean of the player's round
+figures</code><br>
+<code>offset&nbsp;&nbsp;= the lowest raw among THIS year's field</code><br>
+<code>handicap = floor( raw &minus; offset )</code></p>
+</blockquote>
+
+<p>The offset is <strong>not a constant</strong>. It is recomputed every year
+and is whatever makes the lowest man a scratch handicap. Players who are not in
+this year's field do not set the scale.</p>
+
+<p>A player with only one year of history uses whatever rounds exist. A
+newcomer has no figure at all and must be assigned a handicap by hand; he also
+cannot set the offset.</p>
+
+<hr>
+
+<h2>3. Strokes and net scores</h2>
+
+<p>Handicap strokes are allocated in full. There is no ceiling on the total.</p>
+
+<blockquote>
+<p><code>strokes on a hole = floor(H &divide; 18) + 1 if the hole's stroke index
+&le; H mod 18</code></p>
+</blockquote>
+
+<p>A player receives exactly <em>H</em> strokes. A 30-handicap gets two strokes
+on the twelve hardest holes and one on the other six. A 12-handicap gets one
+stroke on the twelve hardest and none elsewhere. A plus handicap gives strokes
+back on the hardest holes.</p>
+
+<p>Net score for a hole, limited to <strong>net double bogey</strong>:</p>
+
+<blockquote>
+<p><code>net = the lesser of ( gross &minus; strokes ) and ( par + 2
+)</code></p>
+</blockquote>
+
+<p>Once the strokes come off, the worst a player can write down is two over
+par. Stated on the gross card instead &mdash; cap the gross at
+<code>par + 2 + strokes</code>, then take the strokes off &mdash; it is the same
+rule, and that is the form used in the handicap calculations in &sect;2 and
+&sect;7.</p>
+
+<hr>
+
+<h2>4. Rounds 1 and 3 &mdash; best ball</h2>
+
+<p>Three separate sources of points. A player can collect from all three in the
+same round.</p>
+
+<h3>4a. Individual hole points</h3>
+
+<p>On each player's own net score. One band only, whichever fits:</p>
+
+<table border="1" cellpadding="6" cellspacing="0">
+<tr><th>Net score</th><th>Points</th></tr>
+<tr><td>3 or more under par</td><td>3.5</td></tr>
+<tr><td>2 under par</td><td>1.5</td></tr>
+<tr><td>1 under par</td><td>0.8</td></tr>
+<tr><td>Level par</td><td>0.4</td></tr>
+<tr><td>Over par</td><td>0</td></tr>
+</table>
+
+<p>A hole-in-one earns nothing extra here. It scores through its net figure like
+any other hole: on a par 3 with no stroke that is a net 1, worth 1.5, and on a
+par 3 where the player is receiving a stroke the net falls to 0 or below and it
+takes the 3.5 band. The 8-point ace bonus is a standing award covering the whole
+event and is entered as an extra (&sect;9).</p>
+
+<p><strong>Quirk to preserve:</strong> a player's individual hole-point total is
+rounded to one decimal place <em>before</em> pair and survival points are added
+to it.</p>
+
+<h3>4b. Pair position points</h3>
+
+<p>On every hole that <em>both</em> partners have played, take the better of
+their two net scores and compare it to par. Sum those figures across the holes
+they share to get the pair's relative-to-par.</p>
+
+<p>Rank all pairs, lowest first, and award:</p>
+
+<table border="1" cellpadding="6" cellspacing="0">
+<tr><th>Position</th><th>1st</th><th>2nd</th><th>3rd</th><th>4th</th><th>5th</th><th>6th</th><th>7th</th><th>8th</th><th>9th</th><th>10th</th></tr>
+<tr><td>Points</td><td>9</td><td>8</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+</table>
+
+<p>Anything below 10th also scores 0. <strong>Both players receive their pair's
+points in full</strong> &mdash; they are not shared.</p>
+
+<h3>4c. Survival</h3>
+
+<p>Starting at hole 1, a foursome survives a hole if <strong>any one</strong> of
+its four members made net par or better. Count consecutive holes survived and
+stop at the first hole where nobody did.</p>
+
+<p>The foursome with the longest run wins, and <strong>each of its four players
+receives 2.0 points</strong>.</p>
+
+<hr>
+
+<h2>5. Round 2 &mdash; match play</h2>
+
+<p>Nothing is scored from cards. The two pairs sharing a foursome play a match
+worth <strong>5.0 points</strong>, split between them in any way that totals
+exactly 5 &mdash; 3 and 2, 4 and 1, 5 and 0, or halves.</p>
+
+<p>Each player receives his own pair's number. Five matches, so 25 points go out
+across the field.</p>
+
+<hr>
+
+<h2>6. Round 4 &mdash; team scramble</h2>
+
+<p>One gross card per team. Work out the team's score relative to par three
+times over: the <strong>front nine</strong>, the <strong>back nine</strong>, and
+the <strong>overall</strong> eighteen. Count only holes actually played, against
+the par of those same holes.</p>
+
+<p>Rank the teams within each of the three categories independently and award:</p>
+
+<table border="1" cellpadding="6" cellspacing="0">
+<tr><th>Position</th><th>1st</th><th>2nd</th><th>3rd</th><th>4th</th><th>5th</th></tr>
+<tr><td>Points</td><td>3</td><td>2</td><td>1</td><td>0.5</td><td>0</td></tr>
+</table>
+
+<p>A team's round total is the sum of its three category awards, so 9 is the
+maximum. <strong>Every player on the team receives that full total.</strong></p>
+
+<hr>
+
+<h2>7. Round 5 &mdash; two-man scramble</h2>
+
+<h3>7a. Sunday pair handicaps</h3>
+
+<p>Computed once Rounds 1 and 3 are complete, then frozen. Both rounds must be
+genuinely finished first: an unplayed hole counts as 0 and will understate the
+figure.</p>
+
+<p>For each player, and for each of this year's Rounds 1 and 3, cap every hole's
+gross at <code>par + 2 + strokes</code>, total the capped card, and subtract
+course par &mdash; the same method as &sect;2, but using this year's rounds
+only. Then:</p>
+
+<blockquote>
+<p><code>individual = the mean of his two round figures, truncated toward
+zero</code><br>
+<code>raw pair&nbsp;&nbsp; = ( lower &times; 2 + ( higher &divide; 2, truncated
+) ) &divide; 3, truncated</code></p>
+</blockquote>
+
+<p>where <em>lower</em> and <em>higher</em> are the two partners' individual
+figures. The formula deliberately weights the better player heavily: the weaker
+partner moves the pair figure only about a sixth as much.</p>
+
+<p>Finally <strong>index the field</strong>. Subtract the lowest raw pair figure
+from every pair, so the best pair plays off scratch and everyone else receives
+the difference. Indexing cannot change the result &mdash; it takes the same
+number off every pair &mdash; it only changes the number handed out on the first
+tee.</p>
+
+<p>Once calculated and announced, these figures are frozen. A later correction
+to a Round 1 or Round 3 card does not move a handicap that has already been
+given to a player on the tee.</p>
+
+<h3>7b. Scoring the round</h3>
+
+<p>Each pair subtracts its own pair handicap and posts <strong>net</strong>
+scores, so no handicap is applied again in scoring.</p>
+
+<p>Rank the pairs by net relative to par over the holes played. With <em>n</em>
+pairs, the points for the pair placed <em>r</em>th are <strong>n &minus;
+r</strong>, never below zero &mdash; so with ten pairs, 9 down to 0. Both
+players receive their pair's points in full.</p>
+
+<hr>
+
+<h2>8. Tiebreaks</h2>
+
+<p>One procedure, used for every contest in the event.</p>
+
+<p>Take the holes in order of difficulty, <strong>hardest stroke index
+first</strong>. At each hole, compare the tied entities &mdash; but only if
+<em>every</em> one of them has a score on that hole; otherwise skip it and move
+to the next.</p>
+
+<ul>
+<li>Lowest score on the hole wins outright and takes the position.</li>
+<li>If several share the low score, they alone carry forward to the next hole.
+The others are eliminated, but elimination costs a place, not the points: they
+rank immediately below and are then resolved among themselves by the same
+routine.</li>
+<li>If the holes run out and entities remain inseparable, they occupy the next
+positions in the block and <strong>split the points for those positions
+equally</strong>.</li>
+</ul>
+
+<p>What gets compared on a hole depends on the contest:</p>
+
+<table border="1" cellpadding="6" cellspacing="0">
+<tr><th>Contest</th><th>Value compared on the hole</th><th>Holes used</th></tr>
+<tr><td>Pair position, Rounds 1 and 3</td><td>The pair's better-ball score
+against par</td><td>All 18</td></tr>
+<tr><td>Survival, Rounds 1 and 3</td><td>The four members' net scores added
+together</td><td>All 18</td></tr>
+<tr><td>Team scramble, front or back nine</td><td>The team's gross hole
+score</td><td>That nine only</td></tr>
+<tr><td>Team scramble, overall</td><td>The team's gross hole score</td><td>All
+18</td></tr>
+<tr><td>Two-man scramble, Round 5</td><td>The pair's posted net hole
+score</td><td>All 18</td></tr>
+</table>
+
+<p>Survival is the one exception to how points are split. An unbreakable
+survival tie gives each player <code>2.0 &divide; the number of tied
+foursomes</code>.</p>
+
+<hr>
+
+<h2>9. Extras and adjustments</h2>
+
+<p>Awarded by hand rather than derived from cards, and added straight onto a
+player's total:</p>
+
+<table border="1" cellpadding="6" cellspacing="0">
+<tr><th>Award</th><th>Points</th></tr>
+<tr><td>Hole-in-one</td><td>8.0</td></tr>
+<tr><td>Chip-in</td><td>2.0</td></tr>
+<tr><td>Longest drive</td><td>1.0</td></tr>
+<tr><td>Closest to the pin</td><td>1.0</td></tr>
+</table>
+
+<p>Any amount may be overridden at the time of entry. Adjustments are free-form
+additions or subtractions and behave identically.</p>
+
+<p>Convention is at least two closest-to-the-pin and two longest-drive awards in
+each of Rounds 1, 2, 3 and 5. The team scramble has no fixed contests.</p>
+
+<hr>
+
+<h2>10. Totals, teams, and when a round counts</h2>
+
+<p>A player's total is the sum of his five round figures plus every extra and
+adjustment.</p>
+
+<p><strong>A team's total is the sum of its four players' totals.</strong> One
+consequence is deliberate and worth knowing: because every member receives the
+team's full Round 4 scramble points, those points are counted four times over at
+team level.</p>
+
+<p>A round contributes nothing until it is under way:</p>
+
+<ul>
+<li><strong>Not started</strong> &mdash; no non-zero score anywhere. Scores
+nothing and cannot place in any tie.</li>
+<li><strong>Live</strong> &mdash; at least one non-zero score. It scores
+immediately, on partial cards, and the standings move as scores come in. Round
+2 counts as live as soon as any match points are recorded.</li>
+<li><strong>Complete</strong> &mdash; every player has all 18 holes.</li>
+</ul>
+
+<p>A round may also be <strong>locked</strong>, which freezes its cards so that
+later edits to the source scorecards cannot move a finished standing.</p>
+
+<p>Manual hole-score corrections sit as a separate layer over the cards. They
+are re-applied every time the round is scored, they always win over the posted
+score, and removing one restores the original.</p>
+
+<p>A round may carry a per-player <strong>handicap override</strong>, for the
+case where a man's handicap is revised part-way through the event. It applies to
+that round's scoring only.</p>
+
+<hr>
+
+<h2>11. Changes made in 2026</h2>
+
+<p>Four corrections were made this year. A scorer comparing against older
+results should know about them.</p>
+
+<ol>
+<li><strong>Handicap strokes are now allocated in full.</strong> The old rule
+gave at most one stroke per hole, so anyone above 18 silently played off 18.
+That was nearly invisible when the field topped out at 20, but eight players sit
+above 18 this year and a 30-handicap was losing twelve strokes.</li>
+
+<li><strong>Net double bogey now means the net cannot exceed par + 2.</strong>
+It previously limited the net to par + 2 + strokes, which let a 30-handicap net
+an 8 on a par 4. It changed nothing already published, because the worst hole in
+either 2025 best-ball round was only three past net par.</li>
+
+<li><strong>An ace no longer scores a bonus inside Rounds 1 and 3.</strong> The
+8 points were being awarded automatically there <em>and</em> as an extra. The
+bonus is a standing, event-wide award, so it is now entered by hand for every
+round alike.</li>
+
+<li><strong>Tied entities eliminated during a tiebreak now keep their
+places.</strong> They were previously dropped and given nothing, leaving part of
+the points on offer undistributed &mdash; four entities tied for positions worth
+9, 8, 7 and 6 handed out only 17 of the 30.</li>
+</ol>
+
+<p>Sunday pair handicaps are also indexed to the field for the first time, so
+the lowest pair plays off scratch. That is presentational: it cannot change the
+Round 5 result.</p>
+
+</body>
+</html>
