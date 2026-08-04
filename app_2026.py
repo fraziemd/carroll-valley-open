@@ -930,16 +930,10 @@ def page_admin(cfg, results, logs):
     st.title("Admin")
     store = get_writable_store()
     is_sheets = not isinstance(store, LocalStore)
-    st.caption("Edits are saved to "
-               + ("the Google Sheet" if is_sheets else f"{cfg.data_dir}/ (local JSON)")
-               + ". Every change triggers a re-score.")
 
     if st.button("🔄 Pull latest scores now", type="primary"):
         refresh_now()
         st.rerun()
-
-    with st.expander("Last pipeline log"):
-        st.text("\n".join(logs))
 
     (tab_timeline, tab_status, tab_fix, tab_extras, tab_match, tab_adjust,
      tab_sunday) = st.tabs(
@@ -1309,6 +1303,14 @@ def page_admin(cfg, results, logs):
 
     with tab_sunday:
         render_sunday_handicap_admin(cfg, results, store, local, is_sheets)
+
+    # Reference material rather than controls, so it sits under the tabs
+    # instead of pushing them down the page.
+    st.caption("Edits are saved to "
+               + ("the Google Sheet" if is_sheets else f"{cfg.data_dir}/ (local JSON)")
+               + ". Every change triggers a re-score.")
+    with st.expander("Last pipeline log"):
+        st.text("\n".join(logs))
 
 
 MATCH_PLAY_POINTS = 5.0
