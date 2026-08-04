@@ -1100,10 +1100,19 @@ def page_admin(cfg, results, logs):
             unit = 'pt' if pts == 1 else 'pts'
             return f"{label} ({fmt_pts(pts)} {unit})"
 
+        def sync_points():
+            # A keyed widget ignores its `value` argument once session state
+            # holds an entry for that key, so the box kept whichever amount it
+            # was first built with. Write the new default in directly instead.
+            picked = st.session_state.get('ex_cat')
+            if picked in EXTRA_CATEGORIES:
+                st.session_state['ex_pts'] = EXTRA_CATEGORIES[picked][1]
+
+        if 'ex_pts' not in st.session_state:
+            st.session_state['ex_pts'] = EXTRA_CATEGORIES[cat_keys[0]][1]
         cat = st.selectbox("Category", cat_keys, format_func=cat_option,
-                           key="ex_cat")
-        points = st.number_input("Points", value=EXTRA_CATEGORIES[cat][1],
-                                 step=0.5, key="ex_pts")
+                           key="ex_cat", on_change=sync_points)
+        points = st.number_input("Points", step=0.5, key="ex_pts")
         note = st.text_input("Note", key="ex_note")
         if st.button("Add extras"):
             if is_sheets:
