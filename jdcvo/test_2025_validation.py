@@ -221,9 +221,22 @@ def test_round_5_handicaps():
     expected_ind = {n: d['handicap'] for n, d in expected['individual_handicaps'].items()}
     compare('R5 individual handicaps', computed_ind, expected_ind, failures)
 
-    computed_pairs = {n: d['pair_handicap'] for n, d in result['pair_handicaps'].items()}
+    # 2025 published the raw pair figures, 8 through 20 — the indexing to the
+    # field was done off the books, not in the notebook, so the fixture has no
+    # pair on scratch. Check the raw numbers against it, then check that
+    # indexing is exactly that set shifted down by its own minimum. It changes
+    # no Round 5 result: the same number comes off every pair, so every net
+    # total rises equally and the ranking is untouched.
     expected_pairs = {n: d['pair_handicap'] for n, d in expected['pair_handicaps'].items()}
-    compare('R5 pair handicaps', computed_pairs, expected_pairs, failures)
+    computed_raw = {n: d['raw_handicap'] for n, d in result['pair_handicaps'].items()}
+    compare('R5 pair handicaps (raw)', computed_raw, expected_pairs, failures)
+
+    offset = min(expected_pairs.values())
+    computed_pairs = {n: d['pair_handicap'] for n, d in result['pair_handicaps'].items()}
+    compare('R5 pair handicaps (indexed)', computed_pairs,
+            {n: v - offset for n, v in expected_pairs.items()}, failures)
+    assert min(computed_pairs.values()) == 0, \
+        f"lowest indexed pair should be scratch, got {min(computed_pairs.values())}"
     assert not failures, '\n'.join(failures)
 
 

@@ -1868,9 +1868,14 @@ def render_sunday_handicap_admin(cfg, results, store, local, is_sheets):
         {'Pair': label_,
          'Player A': p['player_a'], 'A': p['player_a_handicap'],
          'Player B': p['player_b'], 'B': p['player_b_handicap'],
+         'Before indexing': p.get('raw_handicap', p['pair_handicap']),
          'Pair handicap': p['pair_handicap']}
         for label_, p in sorted(pairs.items())
     ]), width='stretch', hide_index=True)
+    st.caption("Pair handicaps are indexed to the field: the lowest pair "
+               "plays off scratch and the rest get the difference. The same "
+               "number comes off every pair, so it moves nobody's position — "
+               "it only sets what each pair is told on the tee.")
 
     with st.expander("How each player's Sunday figure was derived"):
         st.dataframe(pd.DataFrame([

@@ -195,11 +195,33 @@ much higher than event handicaps (Trock's was 35).
 **Step two — combine the partners.**
 
 ```
-pair handicap = int( (lower × 2 + int(higher ÷ 2)) ÷ 3 )
+raw pair handicap = int( (lower × 2 + int(higher ÷ 2)) ÷ 3 )
 ```
 
 where `lower` and `higher` are the two partners' step-one figures. Both `int()`
 calls truncate downward.
+
+**Step three — index the pairs to the field.**
+
+```
+pair handicap = raw − min(raw across all pairs)
+```
+
+The lowest pair plays off scratch and every other pair receives the
+difference. This is done on the **pair** figures, after combining — not on the
+individual figures beforehand, which would give different numbers because the
+⅚ haircut would then apply to smaller inputs.
+
+Indexing cannot change the Round 5 result. The same number comes off every
+pair, so every pair's net total rises by the same amount and the ranking is
+untouched. What it sets is the number a pair is handed on the first tee, and
+how the day reads against par.
+
+> 2025 published the raw figures, 8 (Joe M & Matt K) through 20 (Oaks &
+> Andrew), with no pair on scratch — the indexing was done off the books rather
+> than in the notebook. The regression suite checks the raw numbers against
+> what was published and separately checks that indexing is that same set
+> shifted down by its own minimum.
 
 **How it weights the partners.** Expanded, the formula is:
 

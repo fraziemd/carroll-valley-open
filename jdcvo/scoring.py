@@ -649,7 +649,7 @@ def calculate_two_man_scramble(scores, course_holes, pair_separator=" and "):
 def calculate_round_5_handicaps(round_1_scores, round_3_scores,
                                 round_1_course_holes, round_3_course_holes,
                                 handicaps, round_5_partners,
-                                allocation=ALLOCATION_FULL):
+                                allocation=ALLOCATION_FULL, normalize=True):
     """Compute Round 5 pair handicaps from Round 1 and Round 3 scores.
 
     Each player's gross scores are capped at net double bogey, totaled, and
@@ -657,8 +657,20 @@ def calculate_round_5_handicaps(round_1_scores, round_3_scores,
     truncated toward zero to give an individual handicap. Pair handicap =
     int((lower*2 + int(higher/2)) / 3).
 
+    The pair figures are then indexed to the field: the lowest pair plays off
+    scratch and everyone else receives the difference. ``normalize=False``
+    skips that step, which is only useful for reproducing 2025, where it was
+    done off the books rather than in the notebook.
+
+    Indexing cannot change the Round 5 result. It takes the same number off
+    every pair, so every pair's net total rises by the same amount and the
+    ranking is untouched. What it changes is the number a pair is given on the
+    first tee, and how the day's scores read against par.
+
     ``round_5_partners``: {player_name: partner_name}.
-    Returns {'individual_handicaps', 'pair_handicaps', 'details'}.
+    Returns {'individual_handicaps', 'pair_handicaps', 'details'}, with each
+    pair carrying both its indexed ``pair_handicap`` and the ``raw_handicap``
+    it came from.
     """
     details = []
 
@@ -710,12 +722,22 @@ def calculate_round_5_handicaps(round_1_scores, round_3_scores,
                 'player_b': partner,
                 'player_a_handicap': a,
                 'player_b_handicap': b,
+                'raw_handicap': pair_handicap,
                 'pair_handicap': pair_handicap,
             }
             processed.add(key)
-            details.append(f"{name} & {partner}: {pair_handicap} strokes")
         else:
             details.append(f"Missing handicaps for {name} or {partner}")
+
+    if normalize and pairs:
+        offset = min(p['raw_handicap'] for p in pairs.values())
+        for p in pairs.values():
+            p['pair_handicap'] = p['raw_handicap'] - offset
+        details.append(f"Indexed to the field: lowest pair was {offset}, so "
+                       f"{offset} came off every pair.")
+    for label, p in sorted(pairs.items(), key=lambda x: x[1]['pair_handicap']):
+        details.append(f"{label}: {p['pair_handicap']} strokes "
+                       f"(raw {p['raw_handicap']})")
 
     return {
         'individual_handicaps': individual,
