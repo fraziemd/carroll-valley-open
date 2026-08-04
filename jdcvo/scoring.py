@@ -99,43 +99,42 @@ def _rank_tied_group(tied, tiebreaker_data, hole_subset, category_name,
     ``points_for_position(rank)`` maps a 1-based overall rank to points.
     """
     awarded = {}
-    ranked = []
     remaining = list(tied)
+    position = current_rank
 
-    while len(remaining) > 1:
+    while remaining:
+        if len(remaining) == 1:
+            awarded[remaining[0]] = points_for_position(position)
+            details.append(
+                f"{position}. {remaining[0]}: {awarded[remaining[0]]} points")
+            break
+
         result = break_tie(remaining, tiebreaker_data, hole_subset,
                            category_name, details)
         if isinstance(result, list):
-            # Unbreakable tie: split the points of the positions they occupy.
+            # break_tie narrowed the field to these and could not separate
+            # them, so they share the positions they hold. Whoever it
+            # eliminated on the way is still ranked below and keeps going round
+            # the loop: losing the hardest hole costs you the place, not every
+            # point in the group. Dropping them here awarded nothing at all and
+            # left part of the points undistributed.
             num_tied = len(result)
-            total = sum(points_for_position(current_rank + i) for i in range(num_tied))
+            total = sum(points_for_position(position + i)
+                        for i in range(num_tied))
             avg = total / num_tied
             details.append(
                 f"Tie cannot be broken - splitting {total} points between {num_tied} entries")
             for name in result:
                 awarded[name] = avg
-                ranked.append(name)
                 details.append(
-                    f"{current_rank}-{current_rank + num_tied - 1}. {name}: {avg} points")
-            remaining = []
-            break
+                    f"{position}-{position + num_tied - 1}. {name}: {avg} points")
+            position += num_tied
+            remaining = [e for e in remaining if e not in result]
         else:
-            ranked.append(result)
-            remaining.remove(result)
-            if len(remaining) == 1:
-                ranked.extend(remaining)
-                break
-            elif len(remaining) == 0:
-                break
-
-    # Assign positional points to entities ranked by the tiebreaker.
-    position = current_rank
-    for name in ranked:
-        if name not in awarded:
-            pts = points_for_position(position)
-            awarded[name] = pts
-            details.append(f"{position}. {name}: {pts} points")
+            awarded[result] = points_for_position(position)
+            details.append(f"{position}. {result}: {awarded[result]} points")
             position += 1
+            remaining.remove(result)
 
     return awarded
 

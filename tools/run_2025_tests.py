@@ -13,12 +13,14 @@ import traceback
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from jdcvo import test_2025_validation as suite
+from jdcvo import test_2025_validation, test_tiebreak
 
-tests = [n for n in dir(suite) if n.startswith('test_')]
+suites = [test_2025_validation, test_tiebreak]
+tests = [(s, n) for s in suites for n in sorted(dir(s))
+         if n.startswith('test_')]
 failed = []
 
-for name in sorted(tests):
+for suite, name in tests:
     try:
         getattr(suite, name)()
         print(f"PASS  {name}")

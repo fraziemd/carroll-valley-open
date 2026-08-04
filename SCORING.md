@@ -350,11 +350,28 @@ refresh can never wipe them.
 
 ## 6. Tiebreakers
 
-Every positional tie in every round uses the same routine: compare the tied
-entities hole by hole, **hardest hole first** by stroke index, and the first
-hole with an outright best score wins. Only holes that *all* tied entities have
-played are compared. If no hole separates them, the points for the positions
-they occupy are pooled and split evenly.
+Every positional tie in every round uses the same routine. Compare the tied
+entities hole by hole, **hardest hole first** by stroke index. Whoever is
+outright best on a hole takes the position. Where several share the best score,
+**everyone else is eliminated** and the comparison continues among those
+leaders alone on the next hole — losing the hardest hole puts you out of
+contention for the position, and you cannot win it back later.
+
+Only holes that *all* the entities still in contention have played are
+compared.
+
+If the survivors are never separated, they share the positions they hold and
+the points for those positions are pooled and split evenly. Everyone eliminated
+along the way is then ranked for the positions **below** them, by the same
+routine. Losing the hardest hole costs you the place, not every point in the
+group.
+
+> Fixed in 2026: entities eliminated during the narrowing were dropped from the
+> result and received nothing at all, so part of the points on offer went
+> undistributed. Four entities tied for positions worth 9+8+7+6 handed out only
+> 17 of the 30. It needed the surviving leaders to be identical on every
+> commonly-played hole, so it was unlikely over a full round but quite possible
+> mid-round, when few holes are shared. `test_tiebreak.py` covers it.
 
 ---
 
