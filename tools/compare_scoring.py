@@ -43,17 +43,20 @@ def main():
     raw = results['raw_scores']
     id_to_name = app_cfg.id_to_name()
     problems = []
+    per_round = {}   # round number -> {player: points}, my own figures
 
     for n in app_cfg.round_numbers():
         rcfg = cfg['rounds'][str(n)]
         style = rcfg['scoring_style']
         entries = raw.get(n) or raw.get(str(n)) or []
         # An all-zero card set is a round nobody has played: PlayThru lists the
-        # names as soon as the event exists. It awards nothing.
-        if not any(v for e in entries for v in e['hole_scores'].values()):
+        # names as soon as the event exists. It awards nothing. Match play is
+        # exempt — it has no cards at all, only hand-entered points.
+        if style != 'match_play' and not any(
+                v for e in entries for v in e['hole_scores'].values()):
             print(f"R{n} {style}: not started, awards nothing")
             continue
-        holes = courses[rcfg['course']]['holes']
+        holes = courses[rcfg['course']]['holes'] if rcfg.get('course') else {}
         cards = cards_from(entries)
         # The pipeline keys points by player id; this module works in names.
         app_round = {id_to_name.get(pid, pid): pts for pid, pts
@@ -95,14 +98,48 @@ def main():
                                     key=lambda x: x[1]):
                 print(f"  {rel:+3d}  {pair}  -> "
                       f"{mine['pair_points'][pair]:g}")
+        elif style == 'match_play':
+            # §4.1: nothing is scraped; each player takes his pair's points.
+            expected = {}
+            for row in store.read_match_play():
+                for member in row['players']:
+                    expected[member] = float(row['points'])
+            print(f"\nR{n} match play: {len(expected)} players credited from "
+                  f"{len(store.read_match_play())} pair rows")
         else:
             print(f"\nR{n} {style}: entered by hand, nothing to re-derive")
             continue
 
+        per_round[n] = expected
         for name in sorted(set(expected) | set(app_round)):
             a, b = app_round.get(name, 0.0), expected.get(name, 0.0)
             if abs(a - b) > TOL:
                 problems.append(f"R{n} {name}: app {a:g}, independent {b:g}")
+
+    # --- final totals: rounds + extras + adjustments (§5) ---
+    bucket = {}
+    for row in store.read_extras():
+        bucket[row['player']] = bucket.get(row['player'], 0.0) + float(row['points'])
+    for row in store.read_adjustments():
+        bucket[row['player']] = bucket.get(row['player'], 0.0) + float(row['points'])
+
+    totals = {n: sum(r.get(n, 0.0) for r in per_round.values()) + bucket.get(n, 0.0)
+              for n in {n for r in per_round.values() for n in r} | set(bucket)}
+
+    app_board = {e['name']: e['total_points']
+                 for e in results['leaderboard']['individual'].values()}
+
+    print("\n" + "=" * 60)
+    print(f"{'player':12s} {'app':>8s} {'independent':>12s}   rounds + extras")
+    for name in sorted(totals, key=lambda n: -totals[n]):
+        a = app_board.get(name, 0.0)
+        b = totals[name]
+        flag = '' if abs(a - b) < 1e-6 else '   <-- MISMATCH'
+        parts = '+'.join(f"{per_round[n].get(name, 0):g}"
+                         for n in sorted(per_round))
+        print(f"{name:12s} {a:8.2f} {b:12.2f}   {parts} +{bucket.get(name, 0):g}{flag}")
+        if flag:
+            problems.append(f"total {name}: app {a:g}, independent {b:g}")
 
     print("\n" + "=" * 60)
     if problems:
@@ -110,8 +147,8 @@ def main():
         for p in problems:
             print("  " + p)
     else:
-        print("Every player's round points agree between the two "
-              "implementations.")
+        print("Round points AND final totals agree between the two "
+              "implementations, for every player.")
     return 1 if problems else 0
 
 
