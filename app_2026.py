@@ -32,6 +32,7 @@ st.set_page_config(
 import base64
 import json
 import os
+import time
 from datetime import datetime
 
 import pandas as pd
@@ -523,12 +524,34 @@ def get_writable_store():
     return sheets if sheets is not None else LocalStore(get_config().data_dir)
 
 
+# Seconds between writes of the sheet's output tabs. Re-scoring is cheap;
+# publishing costs eight Google requests, which is what a burst of admin saves
+# used to spend the per-minute quota on. The app's own numbers are always
+# current — this only paces how often the sheet mirrors them.
+PUBLISH_MIN_INTERVAL = 60
+
+
+@st.cache_resource
+def _publish_clock():
+    """When the output tabs were last written, shared across sessions."""
+    return {'last': 0.0, 'forced': False}
+
+
 @st.cache_data(ttl=REFRESH_SECONDS, show_spinner="Updating scores...")
 def _run_cycle(fingerprint):
     """Run one scrape+score cycle (publish only when Sheets is configured)."""
+    clock = _publish_clock()
+    # Decided here rather than passed in, so it stays out of the cache key: as
+    # an argument it would thrash, making the first click after every save
+    # miss the cache and publish anyway.
+    publish = clock['forced'] or (
+        time.time() - clock['last'] >= PUBLISH_MIN_INTERVAL)
     logs = []
-    results = pipeline.run_pipeline(CONFIG_PATH, scrape=True,
+    results = pipeline.run_pipeline(CONFIG_PATH, scrape=True, publish=publish,
                                     log=logs.append, sheets=get_sheets())
+    if publish:
+        clock['last'] = time.time()
+        clock['forced'] = False
     return results, logs
 
 
@@ -536,12 +559,16 @@ def get_results():
     return _run_cycle(data_fingerprint())
 
 
-def refresh_now():
+def refresh_now(publish=False):
+    """Force the next cycle to recompute.
+
+    ``publish`` should be True only when the sheet's own output tabs must be
+    right straight away — locking a round, which freezes scoring onto the
+    published Raw Scores, is the case that matters.
+    """
     _run_cycle.clear()
-    # Also drop the memoized store/config so the next cycle cannot reuse an
-    # object built against a previous deploy's class or roster.
-    _load_sheets.clear()
-    _load_config.clear()
+    if publish:
+        _publish_clock()['forced'] = True
 
 
 # ---------------------------------------------------------------------------
@@ -930,16 +957,12 @@ def page_admin(cfg, results, logs):
     st.title("Admin")
     store = get_writable_store()
     is_sheets = not isinstance(store, LocalStore)
-    st.caption("Edits are saved to "
-               + ("the Google Sheet" if is_sheets else f"{cfg.data_dir}/ (local JSON)")
-               + ". Every change triggers a re-score.")
 
     if st.button("🔄 Pull latest scores now", type="primary"):
-        refresh_now()
+        # An explicit, one-off click, so it also brings the sheet fully up to
+        # date rather than waiting for the publish interval.
+        refresh_now(publish=True)
         st.rerun()
-
-    with st.expander("Last pipeline log"):
-        st.text("\n".join(logs))
 
     (tab_timeline, tab_status, tab_fix, tab_extras, tab_match, tab_adjust,
      tab_sunday) = st.tabs(
@@ -982,7 +1005,10 @@ def page_admin(cfg, results, logs):
                 store.write_round_state(new_states, results['round_statuses'])
             else:
                 local.write_round_state(new_states)
-            refresh_now()
+            # Locking makes the pipeline serve a round from the published Raw
+            # Scores instead of re-scraping, so that tab has to be current
+            # before the lock takes effect.
+            refresh_now(publish=True)
             st.success("Saved.")
             st.rerun()
 
@@ -1100,19 +1126,15 @@ def page_admin(cfg, results, logs):
             unit = 'pt' if pts == 1 else 'pts'
             return f"{label} ({fmt_pts(pts)} {unit})"
 
-        def sync_points():
-            # A keyed widget ignores its `value` argument once session state
-            # holds an entry for that key, so the box kept whichever amount it
-            # was first built with. Write the new default in directly instead.
-            picked = st.session_state.get('ex_cat')
-            if picked in EXTRA_CATEGORIES:
-                st.session_state['ex_pts'] = EXTRA_CATEGORIES[picked][1]
-
-        if 'ex_pts' not in st.session_state:
-            st.session_state['ex_pts'] = EXTRA_CATEGORIES[cat_keys[0]][1]
         cat = st.selectbox("Category", cat_keys, format_func=cat_option,
-                           key="ex_cat", on_change=sync_points)
-        points = st.number_input("Points", step=0.5, key="ex_pts")
+                           key="ex_cat")
+        # The key carries the category, so each one gets its own widget and
+        # starts at its own default. Giving them a shared key meant the browser
+        # could post back the previous category's amount if you clicked Add
+        # while the page was still redrawing — the click raced the redraw and
+        # the stale number won, saving 2 for a hole-in-one.
+        points = st.number_input("Points", value=EXTRA_CATEGORIES[cat][1],
+                                 step=0.5, key=f"ex_pts_{cat}")
         note = st.text_input("Note", key="ex_note")
         if st.button("Add extras"):
             if is_sheets:
@@ -1309,6 +1331,14 @@ def page_admin(cfg, results, logs):
 
     with tab_sunday:
         render_sunday_handicap_admin(cfg, results, store, local, is_sheets)
+
+    # Reference material rather than controls, so it sits under the tabs
+    # instead of pushing them down the page.
+    st.caption("Edits are saved to "
+               + ("the Google Sheet" if is_sheets else f"{cfg.data_dir}/ (local JSON)")
+               + ". Every change triggers a re-score.")
+    with st.expander("Last pipeline log"):
+        st.text("\n".join(logs))
 
 
 MATCH_PLAY_POINTS = 5.0

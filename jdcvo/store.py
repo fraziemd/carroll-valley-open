@@ -168,9 +168,13 @@ class SheetsStore:
         credentials = service_account.Credentials.from_service_account_info(
             service_account_info, scopes=scopes)
         self.gc = gspread.authorize(credentials)
-        self.sheet = self.gc.open_by_key(sheet_key)
+        # Opening the sheet is a metadata read like any other, so it can be
+        # rate-limited too. Unretried it took the whole app down with a raw
+        # APIError, while every later call quietly rode the limit out.
+        self.sheet = self._retry(self.gc.open_by_key, sheet_key)
         self._ws_map = None       # title -> Worksheet (fetched once, reused)
         self._rows_cache = None   # title -> [record dicts], primed per cycle
+        self._raw_cache = None    # Raw Scores rows, fetched once and filtered
 
     @staticmethod
     def _retry(fn, *args, **kwargs):
@@ -219,6 +223,9 @@ class SheetsStore:
         previously also re-fetched sheet metadata). This is the main defense
         against Google's per-minute read quota.
         """
+        # The store now outlives a single cycle, so last cycle's scores must go
+        # or a locked round would be served stale ones.
+        self._raw_cache = None
         titles = list(MANUAL_WORKSHEETS)
         for title in titles:
             self._worksheet(title, MANUAL_WORKSHEETS[title][0])  # ensure exists
@@ -240,6 +247,7 @@ class SheetsStore:
     def _invalidate_cache(self):
         """Drop the batch-read cache after a write so later reads are fresh."""
         self._rows_cache = None
+        self._raw_cache = None
 
     # --- manual inputs (read from sheet; admins may edit sheet directly) ---
 
@@ -440,11 +448,17 @@ class SheetsStore:
 
         Used for locked rounds so finalized scores are served from the sheet
         (the durable copy) instead of being re-scraped.
+
+        The whole tab is fetched once and kept, because every round lives in
+        it: asking per round meant five identical full-tab reads per cycle,
+        which is pure waste against a per-minute request quota.
         """
         headers = ['Round', 'Name'] + [str(h) for h in range(1, 19)] + ['Total']
-        ws = self._worksheet('Raw Scores', headers)
+        if self._raw_cache is None:
+            ws = self._worksheet('Raw Scores', headers)
+            self._raw_cache = self._retry(ws.get_all_records)
         entries = []
-        for r in self._retry(ws.get_all_records):
+        for r in self._raw_cache:
             if str(r.get('Round')) != str(round_number) or not r.get('Name'):
                 continue
             hole_scores = {}
@@ -478,3 +492,4 @@ class SheetsStore:
         ws = self._worksheet('Raw Scores', headers)
         self._retry(ws.clear)
         self._retry(ws.update, rows)
+        self._raw_cache = None
