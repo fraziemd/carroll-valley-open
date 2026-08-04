@@ -20,7 +20,6 @@ HOLE_POINTS = [               # §3.1, checked in order
     (-1, 0.8),                # birdie
     (0, 0.4),                 # par
 ]
-HOLE_IN_ONE = 8.0             # §3.1, on a GROSS 1
 PAIR_POSITION = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]   # §3.2
 SURVIVAL = 2.0                                    # §3.3
 SCRAMBLE_POSITION = [3, 2, 1, 0.5, 0]             # §4.2
@@ -150,8 +149,8 @@ def score_best_ball(cards, holes, handicaps, partners, foursomes):
                 total += 0.8
             elif rel == 0:
                 total += 0.4
-            if gross == 1:
-                total += HOLE_IN_ONE
+            # §3.1: an ace earns nothing extra here; the 8-point bonus is an
+            # event-wide extra, entered by hand.
         nets[name] = player_nets
         # §3.1 preserved quirk: rounded to 1dp before anything else is added.
         points[name] = round(total, 1)

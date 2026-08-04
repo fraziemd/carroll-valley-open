@@ -150,7 +150,11 @@ BEST_BALL_HOLE_POINTS = {
     'birdie': 0.8,                  # net == par - 1
     'par': 0.4,                     # net == par
 }
-HOLE_IN_ONE_BONUS = 8.0
+# An ace scores here only through its net figure, like any other hole: on a par
+# 3 that is an eagle, or better still if the player is receiving a stroke. The
+# 8-point ace bonus is a standing award for the whole event, entered as an
+# extra, so paying it here as well would pay it twice. Until 2026 this module
+# added it automatically, which no round but 1 and 3 could ever do.
 PAIR_POSITION_POINTS = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
 SURVIVAL_POINTS = 2.0
 
@@ -200,7 +204,7 @@ def calculate_best_ball_individual(scores, course_holes, handicaps, partners,
     """Score a best-ball individual round (2025 Rounds 1 and 3).
 
     Three point sources per player:
-    1. Individual hole points (net par/birdie/eagle/better + hole-in-one bonus)
+    1. Individual hole points (net par/birdie/eagle/better)
     2. Pair position points: partners' best net vs par, pairs ranked, 9..0
     3. Survival: 2 pts each to the foursome that survives the most consecutive
        holes from hole 1 (any member net par or better).
@@ -242,8 +246,6 @@ def calculate_best_ball_individual(scores, course_holes, handicaps, partners,
                 pts += BEST_BALL_HOLE_POINTS['birdie']
             elif net == par:
                 pts += BEST_BALL_HOLE_POINTS['par']
-            if gross == 1:
-                pts += HOLE_IN_ONE_BONUS
             if pts:
                 hole_points_detail[hole] = pts
             total += pts

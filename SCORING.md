@@ -275,10 +275,18 @@ Awarded on **net** score against par, hole by hole:
 | 1 under (birdie) | 0.8 |
 | Par | 0.4 |
 | Over par | 0 |
-| **Gross** hole-in-one | +8.0 bonus |
 
-The hole-in-one bonus is on the *gross* score of 1 and stacks with the net
-award.
+An ace is not treated specially here. It scores through its net figure like any
+other hole — on a par 3 that is an eagle, or the 3.5 band if the player is
+receiving a stroke there. The 8-point ace bonus is a standing award covering
+the whole event and is entered as an extra (§5), so awarding it here as well
+would pay it twice.
+
+> Changed in 2026: this round used to add 8.0 automatically for a gross 1, on
+> top of the extras entry. No round but 1 and 3 could do that, since 2 has no
+> cards and 4 and 5 are scrambles, so the bonus is now entered by hand for
+> every round alike. No 2025 card in Round 1 or 3 held an ace, so the
+> regression fixtures are unaffected.
 
 > Preserved quirk: the individual hole-point total is rounded to one decimal
 > place *before* pair and survival points are added.
@@ -432,8 +440,9 @@ is intended, and is closed manually.
 | Regression tests | `jdcvo/test_2025_validation.py` |
 
 Point values are named constants at the top of `scoring.py`
-(`BEST_BALL_HOLE_POINTS`, `HOLE_IN_ONE_BONUS`, `PAIR_POSITION_POINTS`,
-`SURVIVAL_POINTS`). Change them there, not inline.
+(`BEST_BALL_HOLE_POINTS`, `PAIR_POSITION_POINTS`, `SURVIVAL_POINTS`). Change
+them there, not inline. The ace bonus is not among them: it is an extras
+category, in `EXTRA_CATEGORIES` in `app_2026.py`.
 
 **After any change to scoring, re-run the regression suite:**
 
