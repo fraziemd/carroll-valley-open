@@ -168,7 +168,10 @@ class SheetsStore:
         credentials = service_account.Credentials.from_service_account_info(
             service_account_info, scopes=scopes)
         self.gc = gspread.authorize(credentials)
-        self.sheet = self.gc.open_by_key(sheet_key)
+        # Opening the sheet is a metadata read like any other, so it can be
+        # rate-limited too. Unretried it took the whole app down with a raw
+        # APIError, while every later call quietly rode the limit out.
+        self.sheet = self._retry(self.gc.open_by_key, sheet_key)
         self._ws_map = None       # title -> Worksheet (fetched once, reused)
         self._rows_cache = None   # title -> [record dicts], primed per cycle
 

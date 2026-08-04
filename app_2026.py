@@ -537,11 +537,12 @@ def get_results():
 
 
 def refresh_now():
+    # Only the results. The store and config are keyed on data_fingerprint(),
+    # so a new deploy or roster already yields a fresh object without help.
+    # Dropping them here also meant every save re-authorised with Google and
+    # re-fetched the spreadsheet metadata, which is what burned through the
+    # per-minute API quota during a run of admin edits.
     _run_cycle.clear()
-    # Also drop the memoized store/config so the next cycle cannot reuse an
-    # object built against a previous deploy's class or roster.
-    _load_sheets.clear()
-    _load_config.clear()
 
 
 # ---------------------------------------------------------------------------
