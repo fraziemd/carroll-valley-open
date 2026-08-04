@@ -1696,20 +1696,29 @@ def render_match_play_admin(cfg, store, local, is_sheets):
     st.info(f"**{pair_name(pair_a)}** get {fmt_pts(pts_a)}  ·  "
             f"**{pair_name(pair_b)}** get {fmt_pts(pts_b)}")
 
-    if st.button("Save match result"):
-        # Replace any existing rows for either pair, then write both, so the
-        # stored split always totals five even when correcting an entry.
-        drop = {frozenset(pair_a), frozenset(pair_b)}
-        rows = [r for r in existing if frozenset(r['players']) not in drop]
-        rows.append({'players': list(pair_a), 'points': pts_a})
-        rows.append({'players': list(pair_b), 'points': pts_b})
+    def store_rows(rows):
         if is_sheets:
             store.write_match_play(rows)
         else:
             local.write_match_play(rows)
         refresh_now()
+
+    # Both pairs of the selected match, dropped together: a match holding one
+    # side's points and not the other's would score as a 5-0 win.
+    drop = {frozenset(pair_a), frozenset(pair_b)}
+    others = [r for r in existing if frozenset(r['players']) not in drop]
+
+    save_col, clear_col = st.columns([2, 1])
+    if save_col.button("Save match result"):
+        store_rows(others + [{'players': list(pair_a), 'points': pts_a},
+                             {'players': list(pair_b), 'points': pts_b}])
         st.success(f"Saved: {pair_name(pair_a)} {fmt_pts(pts_a)}, "
                    f"{pair_name(pair_b)} {fmt_pts(pts_b)}")
+        st.rerun()
+    if clear_col.button("Clear this match",
+                        disabled=len(others) == len(existing)):
+        store_rows(others)
+        st.success(f"Cleared {pair_name(pair_a)} vs {pair_name(pair_b)}")
         st.rerun()
 
     done = [m for m in matches
@@ -1751,6 +1760,18 @@ def render_match_play_admin(cfg, store, local, is_sheets):
         st.warning("These stored pairs aren't Round 2 matches in the current "
                    "roster, so their points are being credited to nobody's "
                    "match: " + ', '.join(orphans))
+
+    if existing:
+        with st.expander("Start Round 2 over"):
+            st.caption(f"Deletes all {len(existing)} stored pair results, "
+                       f"including any orphans. The rounds themselves are "
+                       f"untouched.")
+            confirm = st.checkbox("Yes, delete every match play result",
+                                  key="mp_clear_confirm")
+            if st.button("Clear all match play", disabled=not confirm):
+                store_rows([])
+                st.success("All match play results deleted.")
+                st.rerun()
 
 
 def render_sunday_handicap_admin(cfg, results, store, local, is_sheets):
