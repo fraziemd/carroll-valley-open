@@ -1849,6 +1849,13 @@ def render_sunday_handicap_admin(cfg, results, store, local, is_sheets):
             st.error(f"Could not calculate: {e}")
 
     preview = st.session_state.get('sunday_preview')
+    if preview and any('raw_handicap' not in p
+                       for p in preview['pair_handicaps'].values()):
+        # Held over from before pair handicaps were indexed to the field. It
+        # would render un-indexed numbers as though they were final, so it goes
+        # and the button asks for a fresh set.
+        st.session_state.pop('sunday_preview', None)
+        preview = None
     if not preview:
         return
 
@@ -1868,14 +1875,14 @@ def render_sunday_handicap_admin(cfg, results, store, local, is_sheets):
         {'Pair': label_,
          'Player A': p['player_a'], 'A': p['player_a_handicap'],
          'Player B': p['player_b'], 'B': p['player_b_handicap'],
-         'Before indexing': p.get('raw_handicap', p['pair_handicap']),
          'Pair handicap': p['pair_handicap']}
-        for label_, p in sorted(pairs.items())
+        for label_, p in sorted(pairs.items(),
+                                key=lambda kv: kv[1]['pair_handicap'])
     ]), width='stretch', hide_index=True)
-    st.caption("Pair handicaps are indexed to the field: the lowest pair "
-               "plays off scratch and the rest get the difference. The same "
-               "number comes off every pair, so it moves nobody's position — "
-               "it only sets what each pair is told on the tee.")
+    offset = min(p['raw_handicap'] for p in pairs.values())
+    st.caption(f"Indexed to the field: {offset} strokes came off every pair, "
+               f"so the lowest plays off scratch. A uniform shift moves "
+               f"nobody's position.")
 
     with st.expander("How each player's Sunday figure was derived"):
         st.dataframe(pd.DataFrame([
