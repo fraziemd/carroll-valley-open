@@ -243,14 +243,14 @@ def _audio_data_uri(rel_path):
 # different type of interaction, even within the same sample "category"),
 # so the sound itself tells you what kind of thing just happened.
 _ARCADE_SFX = {
-    'radio': _audio_data_uri(os.path.join('sfx_preview', 'up_2.mp3')),
-    'dropdown_open': _audio_data_uri(os.path.join('sfx_preview', 'drink_2.mp3')),
-    'dropdown_select': _audio_data_uri(os.path.join('sfx_preview', 'power_up_2.mp3')),
-    'expander': _audio_data_uri(os.path.join('sfx_preview', 'drink_1.mp3')),
-    'button': _audio_data_uri(os.path.join('sfx_preview', 'coins_2.mp3')),
-    'admin_submit': _audio_data_uri(os.path.join('sfx_preview', 'coins_1.mp3')),
-    'round_live': _audio_data_uri(os.path.join('sfx_preview', 'power_up_1.mp3')),
-    'leader_change': _audio_data_uri(os.path.join('sfx_preview', 'victory_2.mp3')),
+    'radio': _audio_data_uri(os.path.join('sfx_preview', 'coin_3.mp3')),
+    'dropdown_open': _audio_data_uri(os.path.join('sfx_preview', 'coin_3.mp3')),
+    'dropdown_select': _audio_data_uri(os.path.join('sfx_preview', 'coin_7.mp3')),
+    'expander': _audio_data_uri(os.path.join('sfx_preview', 'coin_3.mp3')),
+    'button': _audio_data_uri(os.path.join('sfx_preview', 'coin_7.mp3')),
+    'admin_submit': _audio_data_uri(os.path.join('sfx_preview', 'coin_10.mp3')),
+    'round_live': _audio_data_uri(os.path.join('sfx_preview', 'coin_10.mp3')),
+    'leader_change': _audio_data_uri(os.path.join('sfx_preview', 'coin_10.mp3')),
 }
 
 # Fixed historical high score shown in the HI-SCORE display (2025 champion's
