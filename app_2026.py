@@ -243,7 +243,7 @@ def _audio_data_uri(rel_path):
 # different type of interaction, even within the same sample "category"),
 # so the sound itself tells you what kind of thing just happened.
 _ARCADE_SFX = {
-    'radio': _audio_data_uri(os.path.join('sfx_preview', 'coin_3.mp3')),
+    'radio': _audio_data_uri(os.path.join('sfx_preview', 'coin_10.mp3')),
     'dropdown_open': _audio_data_uri(os.path.join('sfx_preview', 'coin_3.mp3')),
     'dropdown_select': _audio_data_uri(os.path.join('sfx_preview', 'coin_7.mp3')),
     'expander': _audio_data_uri(os.path.join('sfx_preview', 'coin_3.mp3')),
