@@ -968,6 +968,14 @@ def page_admin(cfg, results, logs):
         refresh_now(publish=True)
         st.rerun()
 
+    # Above the tabs, so a bad card is in front of you whichever tab you are
+    # working in. The detail sits in Progress; this is only the flag.
+    _cards = card_problems(cfg, results)
+    if _cards:
+        st.error(f"**{len(_cards)} scorecard problem"
+                 f"{'s' if len(_cards) > 1 else ''}** — see Card check at the "
+                 f"foot of the Progress tab.")
+
     (tab_timeline, tab_status, tab_fix, tab_extras, tab_match, tab_adjust,
      tab_sunday) = st.tabs(
         ["Progress", "Round status", "Fix a score", "Extras", "Match play",
@@ -1589,6 +1597,145 @@ def _timeline_warnings(cfg, results, round_states, match_entries):
     return warnings
 
 
+# How far behind his group a man can fall before it's worth mentioning. The
+# field figure is looser because rounds 4 and 5 have no foursomes to compare
+# within, so the only yardstick is everyone else, and groups tee off apart.
+_STALL_GROUP = 3
+_STALL_FIELD = 6
+
+
+def _card_rows(cfg, results, n):
+    """Each card's progress: what was posted, how far, and what's blank behind.
+
+    A hole with no score and a hole with a 0 are the same thing to the engine —
+    not played — so both count as blank here.
+    """
+    rows = {}
+    for entry in results['raw_scores'].get(str(n), []):
+        played = {int(h): s for h, s in entry.get('hole_scores', {}).items()
+                  if s}
+        last = max(played) if played else 0
+        rows[entry.get('name', '?')] = {
+            'last': last,
+            'gaps': [h for h in range(1, last) if h not in played],
+        }
+    return rows
+
+
+def card_problems(cfg, results):
+    """Cards that will score wrongly, or for nobody, stated in plain language.
+
+    Every case here is otherwise silent. The leaderboard still renders, the
+    round still reads LIVE, and the only trace is a line in a scoring log on
+    the public Rounds page that nobody opens mid-event. Two kinds of trouble:
+    a card that doesn't match anyone on the roster, and a card with holes
+    missing behind the one the man has reached.
+    """
+    out = []
+    statuses = results['round_statuses']
+    for n in cfg.round_numbers():
+        rcfg = cfg.round_config(n)
+        style = rcfg['scoring_style']
+        if style == 'match_play':
+            continue                      # no cards to check
+        k = str(n)
+        if statuses.get(k, state.NOT_STARTED) == state.NOT_STARTED:
+            continue
+        label = round_label(cfg, k)
+        live = statuses.get(k) == state.LIVE
+        rows = _card_rows(cfg, results, n)
+        roster = {p['name'] for p in cfg.players.values()}
+
+        # --- is every card one we can credit to somebody? ---
+        if style == 'two_man_scramble':
+            sep = rcfg.get('pair_separator', ' and ')
+            partners = cfg.partners(n)
+            expected = {frozenset((a, b)) for a, b in partners.items() if b}
+            found = set()
+            for name in sorted(rows):
+                if sep not in name:
+                    out.append(
+                        f"{label}: the card called \"{name}\" has no "
+                        f"\"{sep.strip()}\" in it, so it can't be split into "
+                        f"two men. Nobody is being credited for it.")
+                    continue
+                a, b = [x.strip() for x in name.split(sep, 1)]
+                stray = [x for x in (a, b) if x not in roster]
+                if stray:
+                    out.append(
+                        f"{label}: \"{name}\" names "
+                        f"{' and '.join(stray)}, who "
+                        f"{'is' if len(stray) == 1 else 'are'} not on the "
+                        f"roster. That card scores for nobody — check the "
+                        f"spelling on PlayThru.")
+                    continue
+                if partners.get(a) != b:
+                    out.append(
+                        f"{label}: \"{name}\" are not partners in the roster "
+                        f"({a} is down with {partners.get(a) or 'nobody'}). "
+                        f"Their points are going to the wrong two men.")
+                found.add(frozenset((a, b)))
+            for pair in sorted(expected - found, key=sorted):
+                a, b = sorted(pair)
+                out.append(f"{label}: there is no card for {a} and {b}. "
+                           f"Both score 0 until one appears.")
+        else:
+            if style == 'team_scramble':
+                expected, kind = {p['team'] for p in cfg.players.values()}, 'team'
+            else:
+                expected, kind = roster, 'player'
+            for name in sorted(set(rows) - expected):
+                out.append(
+                    f"{label}: \"{name}\" has a card but is not a {kind} on "
+                    f"the roster, so it scores for nobody. Check the spelling "
+                    f"on PlayThru.")
+            for name in sorted(expected - set(rows)):
+                who = ("every man on that team scores 0" if kind == 'team'
+                       else f"{name} scores 0")
+                out.append(f"{label}: there is no card for {name}, so {who} "
+                           f"for the round.")
+
+        # --- blanks behind the ball, and cards that have stopped moving ---
+        if style == 'best_ball_individual':
+            partners_n, foursomes_n = cfg.partners(n), cfg.foursomes(n)
+            group_of = {}
+            for name in rows:
+                mates = [name, partners_n.get(name)]
+                mates += list(foursomes_n.get(name) or [])
+                group_of[name] = [m for m in mates if m in rows]
+            threshold = _STALL_GROUP
+            yardstick = "his group"
+        else:
+            group_of = {name: list(rows) for name in rows}
+            threshold = _STALL_FIELD
+            yardstick = "the field"
+
+        for name in sorted(rows):
+            row = rows[name]
+            if row['gaps']:
+                holes = ', '.join(str(h) for h in row['gaps'])
+                plural = 's' if len(row['gaps']) > 1 else ''
+                out.append(
+                    f"{label}: {name} has posted through hole {row['last']} "
+                    f"but hole{plural} {holes} {'are' if plural else 'is'} "
+                    f"blank. A blank counts as not played, so "
+                    + ("that hole drops out of his pair's total altogether "
+                       "and they are ranked over fewer holes than everyone "
+                       "else." if style == 'best_ball_individual'
+                       else "it is left out of the total."))
+            if live:
+                ahead = max((rows[m]['last'] for m in group_of[name]),
+                            default=0)
+                if ahead - row['last'] >= threshold:
+                    posted = (f"posted through hole {row['last']}"
+                              if row['last'] else "posted nothing")
+                    out.append(
+                        f"{label}: {name} has {posted} while {yardstick} is "
+                        f"through hole {ahead}. If he has stopped posting, no "
+                        f"later score will ever flag it.")
+    return out
+
+
 def render_timeline(cfg, results, round_states, store, local, is_sheets):
     """Read-only progress view: what's done, and what to do next."""
     extras = store.read_extras()
@@ -1628,6 +1775,24 @@ def render_timeline(cfg, results, round_states, store, local, is_sheets):
             f"{mark} {label}<br>"
             f"<span style='opacity:.6;font-size:.85em;padding-left:1.6em'>"
             f"{s['detail']}</span>", unsafe_allow_html=True)
+
+    cards = card_problems(cfg, results)
+    if cards:
+        st.divider()
+        st.markdown("**Card check**")
+        for c in cards:
+            st.warning(c)
+        st.caption(f"A card is flagged when it can't be matched to anyone on "
+                   f"the roster, when a hole behind the one a man has reached "
+                   f"is blank, or when he is {_STALL_GROUP}+ holes behind his "
+                   f"foursome ({_STALL_FIELD}+ behind the field in rounds "
+                   f"without foursomes). Fix blanks on PlayThru, or under "
+                   f"**Fix a score** if the round is locked.")
+    else:
+        st.divider()
+        st.markdown("**Card check**")
+        st.success("Every card matches the roster, and none has a blank hole "
+                   "behind the ball.")
 
     if warnings:
         st.divider()
