@@ -243,7 +243,7 @@ def _audio_data_uri(rel_path):
 # different type of interaction, even within the same sample "category"),
 # so the sound itself tells you what kind of thing just happened.
 _ARCADE_SFX = {
-    'radio': _audio_data_uri(os.path.join('sfx_preview', 'coin_10.mp3')),
+    'radio': _audio_data_uri(os.path.join('sfx_preview', 'coin_3.mp3')),
     'dropdown_open': _audio_data_uri(os.path.join('sfx_preview', 'coin_3.mp3')),
     'dropdown_select': _audio_data_uri(os.path.join('sfx_preview', 'coin_7.mp3')),
     'expander': _audio_data_uri(os.path.join('sfx_preview', 'coin_3.mp3')),
@@ -252,6 +252,7 @@ _ARCADE_SFX = {
     'round_live': _audio_data_uri(os.path.join('sfx_preview', 'coin_10.mp3')),
     'leader_change': _audio_data_uri(os.path.join('sfx_preview', 'coin_10.mp3')),
     'tab': _audio_data_uri(os.path.join('sfx_preview', 'coin_10.mp3')),
+    'press_start': _audio_data_uri(os.path.join('sfx_preview', 'coin_10.mp3')),
 }
 
 # Fixed historical high score shown in the HI-SCORE display (2025 champion's
@@ -324,6 +325,7 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
     round_live: "__SFX_ROUND_LIVE__",
     leader_change: "__SFX_LEADER_CHANGE__",
     tab: "__SFX_TAB__",
+    press_start: "__SFX_PRESS_START__",
   };
   const sfxTemplates = {};
   function playSample(name) {
@@ -395,9 +397,14 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
         playSample('tab');
         return;
       }
-      // Any other button click in the app (refresh, save, admin actions...)
-      if (target.closest('button')) {
-        playSample('button');
+      // "Press Start" title-screen button (match by label text).
+      var btn = target.closest('button');
+      if (btn) {
+        if ((btn.textContent || '').trim().toLowerCase() === 'press start') {
+          playSample('press_start');
+        } else {
+          playSample('button');
+        }
         return;
       }
     }, true);
@@ -455,7 +462,8 @@ def build_arcade_audio_html():
                               ('admin_submit', '__SFX_ADMIN_SUBMIT__'),
                               ('round_live', '__SFX_ROUND_LIVE__'),
                               ('leader_change', '__SFX_LEADER_CHANGE__'),
-                              ('tab', '__SFX_TAB__')]:
+                              ('tab', '__SFX_TAB__'),
+                              ('press_start', '__SFX_PRESS_START__')]:
         html = html.replace(placeholder, _ARCADE_SFX[key])
     return html
 
