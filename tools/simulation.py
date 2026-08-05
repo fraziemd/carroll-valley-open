@@ -78,6 +78,20 @@ def _wipe(cfg, store, unlock):
     store.write_corrections([])
     store.write_adjustments([])
     store.publish_raw_scores({n: [] for n in cfg.round_numbers()})
+    # Frozen Sunday handicaps outlive the cards they were derived from, by
+    # design, so they have to be cleared explicitly or a set computed from
+    # test scores would be showing on the tee.
+    store.write_round_5_handicaps(None)
+    # The local copies are the fallback when a scrape fails, so leaving
+    # simulated cards there means a bad network moment could put them back on
+    # the board.
+    local_dir = cfg.data_dir
+    for name in os.listdir(local_dir) if os.path.isdir(local_dir) else []:
+        if name.startswith('raw_scores_round_') or name in (
+                'extras.json', 'match_play.json', 'corrections.json',
+                'adjustments.json', 'results.json',
+                'round_5_handicaps.json'):
+            os.remove(os.path.join(local_dir, name))
     if unlock:
         states = {str(n): {'override_status': None, 'locked': False}
                   for n in cfg.round_numbers()}
