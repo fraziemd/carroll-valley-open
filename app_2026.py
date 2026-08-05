@@ -251,6 +251,7 @@ _ARCADE_SFX = {
     'admin_submit': _audio_data_uri(os.path.join('sfx_preview', 'coin_10.mp3')),
     'round_live': _audio_data_uri(os.path.join('sfx_preview', 'coin_10.mp3')),
     'leader_change': _audio_data_uri(os.path.join('sfx_preview', 'coin_10.mp3')),
+    'tab': _audio_data_uri(os.path.join('sfx_preview', 'coin_10.mp3')),
 }
 
 # Fixed historical high score shown in the HI-SCORE display (2025 champion's
@@ -322,6 +323,7 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
     admin_submit: "__SFX_ADMIN_SUBMIT__",
     round_live: "__SFX_ROUND_LIVE__",
     leader_change: "__SFX_LEADER_CHANGE__",
+    tab: "__SFX_TAB__",
   };
   const sfxTemplates = {};
   function playSample(name) {
@@ -388,6 +390,11 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
         playSample('expander');
         return;
       }
+      // Admin tab switches (Streamlit renders tabs as button[role="tab"]).
+      if (target.closest('button[role="tab"]')) {
+        playSample('tab');
+        return;
+      }
       // Any other button click in the app (refresh, save, admin actions...)
       if (target.closest('button')) {
         playSample('button');
@@ -447,7 +454,8 @@ def build_arcade_audio_html():
                               ('button', '__SFX_BUTTON__'),
                               ('admin_submit', '__SFX_ADMIN_SUBMIT__'),
                               ('round_live', '__SFX_ROUND_LIVE__'),
-                              ('leader_change', '__SFX_LEADER_CHANGE__')]:
+                              ('leader_change', '__SFX_LEADER_CHANGE__'),
+                              ('tab', '__SFX_TAB__')]:
         html = html.replace(placeholder, _ARCADE_SFX[key])
     return html
 
