@@ -10,11 +10,22 @@ Nothing from 2025 was modified: the notebooks, `app.py`, and all
 `*_results.json` / `golf_scores_*.json` files are untouched and now serve as
 the validation fixtures for the new engine.
 
+## Start here
+
+| If you want to | Read |
+|---|---|
+| Pick this project up cold, or fix something during the event | **`HANDOFF.md`** — what runs where, how to push a change, GitHub auth when switching machines, and an event-day playbook |
+| Know exactly how a point is earned | **`SCORING.md`** — the rules with derivations and code locations |
+| Hand the rules to a committee member | **`RULES.html`** and the `.docx` beside it — standalone, derived from the code |
+| Hand something to the players | **`PLAYER_GUIDE.html`** and its `.docx` — two pages for the bag |
+
 ## What's here
 
 | Path | Purpose |
 |---|---|
+| `HANDOFF.md` | Orientation for a new session: machines, auth, deploy, event-day fixes |
 | `SCORING.md` | **The rules of the event** — every point value, the yearly handicap formula, and the Sunday pair handicap formula |
+| `RULES.html`, `PLAYER_GUIDE.html` | Shareable rules documents; `tools/html_to_docx.py` regenerates the Word versions |
 | `jdcvo/scoring.py` | Pure scoring engine (best ball, match play, scrambles, survival, tiebreakers, R5 handicaps) |
 | `jdcvo/test_2025_validation.py` | Proves the engine reproduces the saved 2025 results exactly |
 | `jdcvo/playthru.py` | PlayThru scraper — plain HTTP + BeautifulSoup (the page is server-rendered; Selenium was never needed) |
@@ -25,7 +36,7 @@ the validation fixtures for the new engine.
 | `app_2026.py` | The Streamlit app (public + admin) |
 | `event_2026.json` | The event definition — edit this for 2026 |
 | `data_2026/` | Working data: raw scores, manual inputs, results + timestamped history |
-| `.github/workflows/score-update.yml` | Optional 5-minute cron publishing to Sheets |
+| `.github/workflows/score-update.yml` | A 5-minute cron that would publish to Sheets — **on disk only, deliberately not committed.** The token in use lacks GitHub's `workflow` scope, so any push touching `.github/` is rejected entirely. Never `git add` it. There is consequently no scheduled scrape: scores are pulled when somebody opens the app. See `HANDOFF.md` §3 |
 
 ## How scores flow
 
