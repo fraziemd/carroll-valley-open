@@ -390,8 +390,8 @@ ARCADE_AUDIO_HTML_TEMPLATE = """
         playSample('expander');
         return;
       }
-      // Admin tab switches (Streamlit renders tabs as button[role="tab"]).
-      if (target.closest('button[role="tab"]')) {
+      // Admin tab switches (BaseWeb renders tabs as div[role="tab"]).
+      if (target.closest('[role="tab"]')) {
         playSample('tab');
         return;
       }
