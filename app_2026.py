@@ -702,8 +702,6 @@ def page_leaderboard(cfg, results):
         st.caption(" | ".join(status_bits) +
                    f" &nbsp;&nbsp;·&nbsp;&nbsp; updated {results['generated_at']}")
 
-    st.info("✅ Deploy test — if you see this, the push worked. Remove me.")
-
     col1, col2 = st.columns(2)
 
     with col1:
